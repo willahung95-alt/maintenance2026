@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理（v5.2601061051）</title>
+  <title>客戶維護管理（v5.2601061124）</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -271,7 +271,7 @@
 <body>
 <header>
   <div class="title">
-    <h1>客戶維護管理（v5.2601061051）</h1>
+    <h1>客戶維護管理（v5.2601061124）</h1>
     <p>管理端：新增/編輯維護排程。工程師端：可選「清單 / 行事曆」檢視，直接設定完工。</p>
   </div>
 
@@ -358,6 +358,7 @@
       <h2 id="editTitle">新增/編輯維護</h2>
       <div class="row">
         <button class="btn" id="btnBack" type="button">← 回清單</button>
+        <button type="button" class="btn danger" id="btnDelete" style="display:none">刪除此維護</button>
       </div>
     </div>
 
@@ -366,7 +367,7 @@
         <div class="grid two">
           <div>
             <label>客戶名稱</label>
-            <input type="text" id="customer" required placeholder="例如：OO科技大學 / 鴻洋遊艇 / 台灣大福…" />
+            <input type="text" id="customer" required placeholder="填入客戶全名" />
           </div>
           <div>
             <label>產品名稱（可下拉快速選擇，也可自行輸入）</label>
@@ -946,19 +947,23 @@
 
   // --- 其他輔助 UI 函數 (openEditor, renderEditorYMChips 等) 保持原樣即可 ---
   function openEditor(id){
-    editingId = id;
-    if(!id){
-      customerEl.value = ""; productEl.value = ""; notesEl.value = "";
-      startEl.value = todayISO(); endEl.value = addYearsMinus1Day(startEl.value);
-      editingYMList = buildAutoYMList(startEl.value, endEl.value);
-    } else {
-      const rec = records.find(r => r.id === id);
-      customerEl.value = rec.customer; productEl.value = rec.product;
-      notesEl.value = rec.notes; startEl.value = rec.startDate; endEl.value = rec.endDate;
-      editingYMList = (rec.schedule || []).map(s => s.ym);
-    }
-    renderEditorYMChips();
+  editingId = id;
+
+  // 只有編輯既有資料時，才顯示「刪除本維護資料」
+  btnDelete.style.display = id ? "inline-flex" : "none";
+
+  if(!id){
+    customerEl.value = ""; productEl.value = ""; notesEl.value = "";
+    startEl.value = todayISO(); endEl.value = addYearsMinus1Day(startEl.value);
+    editingYMList = buildAutoYMList(startEl.value, endEl.value);
+  } else {
+    const rec = records.find(r => r.id === id);
+    customerEl.value = rec.customer; productEl.value = rec.product;
+    notesEl.value = rec.notes; startEl.value = rec.startDate; endEl.value = rec.endDate;
+    editingYMList = (rec.schedule || []).map(s => s.ym);
   }
+  renderEditorYMChips();
+}
   function renderEditorYMChips(){
     const list = Array.from(new Set(editingYMList.filter(Boolean))).sort();
     ymChips.innerHTML = list.map(ym => `<span class="mchip todo">${esc(ym)} <span class="link" data-act="rmYM" data-ym="${esc(ym)}">×</span></span>`).join("");
@@ -983,6 +988,7 @@
 </script>
 </body>
 </html>
+
 
 
 
