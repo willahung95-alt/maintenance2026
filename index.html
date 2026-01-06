@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理（v5.2601061145）</title>
+  <title>客戶維護管理（v5.2601061230）</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -271,7 +271,7 @@
 <body>
 <header>
   <div class="title">
-    <h1>客戶維護管理（v5.2601061145）</h1>
+    <h1>客戶維護管理（v5.2601061230）</h1>
     <p>管理端：新增/編輯維護排程。工程師端：可選「清單 / 行事曆」檢視，直接設定完工。</p>
   </div>
 
@@ -325,6 +325,7 @@
                 <th style="width:160px">產品名稱</th>
                 <th style="width:240px">維護期間</th>
                 <th>預定維護月份</th>
+                <th style="width:260px">備註</th>
                 <th style="width:170px">維護狀態（本月）</th>
                 <th style="width:220px">操作（本月）</th>
               </tr>
@@ -742,7 +743,7 @@ startEl.addEventListener("change", () => {
     
     if(mode === "eng" && engView === "cal") renderCalendar(list);
 
-    rowsEl.innerHTML = list.length ? "" : `<tr><td colspan="6" class="small">無符合條件資料。</td></tr>`;
+    rowsEl.innerHTML = list.length ? "" : `<tr><td colspan="7" class="small">無符合條件資料。</td></tr>`;
     list.forEach(r => {
       rowsEl.insertAdjacentHTML("beforeend", `
         <tr>
@@ -750,6 +751,7 @@ startEl.addEventListener("change", () => {
           <td>${esc(r.product)}</td>
           <td class="mono">${esc(r.startDate)} ~ ${esc(r.endDate)}</td>
           <td>${renderPlannedMonths(r, ymStr)}</td>
+          <td>${renderNotesCell(r)}</td>
           <td>${renderMonthStatus(r, ymStr)}</td>
           <td>${renderMonthAction(r, ymStr)}</td>
         </tr>
@@ -875,6 +877,14 @@ startEl.addEventListener("change", () => {
       return `<span class="${cls}${selected}"><span class="d"></span>${esc(s.ym)}</span>`;
     }).join("") + `</div>`;
   }
+  function renderNotesCell(rec){
+  const n = (rec.notes || "").trim();
+  if(!n) return `<span class="small">—</span>`;
+
+  // 清單顯示短版，滑鼠移過去看完整（title）
+  const short = n.length > 50 ? (n.slice(0, 50) + "…") : n;
+  return `<span title="${esc(n)}">${esc(short)}</span>`;
+}
   function renderMonthStatus(rec, ymStr){
     const sch = findSchedule(rec, ymStr);
     if(!sch) return `<span class="status"><span class="dot neutral"></span>本月無維護</span>`;
@@ -1021,6 +1031,7 @@ startEl.addEventListener("change", () => {
 </script>
 </body>
 </html>
+
 
 
 
