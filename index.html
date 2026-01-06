@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理（v5.2601061345）</title>
+  <title>客戶維護管理（v5.2601061430）</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -279,14 +279,60 @@
   max-height: none;
   overflow-wrap: anywhere;
 }
-  </style>
+  
+  /* ===== 提示訊息（儲存中 / 完成 / 失敗）===== */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(15, 23, 42, .22);
+    display:flex; align-items:center; justify-content:center;
+    z-index: 9999;
+  }
+  .overlayCard{
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:14px;
+    padding:16px 18px;
+    min-width: 260px;
+    box-shadow: 0 12px 40px rgba(15,23,42,.18);
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .spinner{
+    width:22px; height:22px;
+    border:3px solid rgba(15,23,42,.15);
+    border-top-color: rgba(15,23,42,.55);
+    border-radius:50%;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg);} }
+
+  .overlayText{ font-weight:700; }
+  .overlaySub{ color: var(--muted); font-size:12px; }
+
+  .toast{
+    position:fixed;
+    right:16px; bottom:16px;
+    background:#0f172a;
+    color:#fff;
+    padding:10px 12px;
+    border-radius:12px;
+    box-shadow: 0 10px 30px rgba(15,23,42,.22);
+    font-size:13px;
+    z-index: 10000;
+    max-width: 360px;
+    line-height: 1.3;
+  }
+  .toast.success{ background:#065f46; }
+  .toast.error{ background:#7f1d1d; }
+  .toast.info{ background:#0f172a; }
+
+</style>
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 </head>
 
 <body>
 <header>
   <div class="title">
-    <h1>客戶維護管理（v5.2601061345）</h1>
+    <h1>客戶維護管理（v5.2601061430）</h1>
     <p>管理端：新增/編輯維護排程。工程師端：可選「清單 / 行事曆」檢視，直接設定完工。</p>
   </div>
 
@@ -310,7 +356,7 @@
 
 <main>
   <!-- HOME -->
-  <section id="routeHome" class="card">
+  <section id="routeHome" class="card" style="display:block">
     <div class="hd">
       <h2 id="homeTitle">維護清單</h2>
       <div class="row" style="min-width: 680px; max-width: 980px;">
@@ -369,7 +415,7 @@
   </section>
 
   <!-- EDIT -->
-  <section id="routeEdit" class="card">
+  <section id="routeEdit" class="card" style="display:none">
     <div class="hd">
       <h2 id="editTitle">新增/編輯維護</h2>
       <div class="row">
@@ -479,6 +525,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
   
+
+  <!-- 保存提示/遮罩 -->
+  <div id="savingOverlay" class="overlay" style="display:none">
+    <div class="overlayCard">
+      <div class="spinner"></div>
+      <div class="overlayText" id="savingText">儲存中…</div>
+      <div class="overlaySub" id="savingSub">請稍候，正在同步雲端資料</div>
+    </div>
+  </div>
+  <div id="toast" class="toast" style="display:none"></div>
+
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbznmfZ1quMslZxY6dftt_83uYqUGTh9THmoIO4LdFx7O9CPl0eKn2vvLP0YqM9nv2jf/exec?token=otsukakh5501398";
 (() => {
@@ -542,12 +599,72 @@
   }
 
   // 替換原本的 save：改為傳送到 Google Sheets
-    async function save(){
+
+  // ===== 儲存提示（儲存中 / 完成 / 失敗）=====
+  const savingOverlay = document.getElementById("savingOverlay");
+  const savingText = document.getElementById("savingText");
+  const savingSub = document.getElementById("savingSub");
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+
+  function showOverlay(title, sub){
+    if(!savingOverlay) return;
+    savingText.textContent = title || "儲存中…";
+    savingSub.textContent = sub || "請稍候，正在同步雲端資料";
+    savingOverlay.style.display = "flex";
+  }
+  function hideOverlay(){
+    if(!savingOverlay) return;
+    savingOverlay.style.display = "none";
+  }
+  function showToast(msg, type="info", ms=2200){
+    if(!toastEl) return;
+    if(toastTimer) clearTimeout(toastTimer);
+    toastEl.className = "toast " + type;
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    toastTimer = setTimeout(()=>{ toastEl.style.display="none"; }, ms);
+  }
+
+  async function save(options={}){
+    const { ui=false, label="儲存中…"} = options || {};
     try {
+      if(ui) showOverlay(label, "請稍候，正在同步雲端資料");
+
+      const payload = records.map(r => ({
+        id: r.id || "",
+        customer: r.customer || "",
+        product: r.product || "",
+        startDate: r.startDate || "",
+        endDate: r.endDate || "",
+        notes: r.notes || "",
+        schedule: Array.isArray(r.schedule) ? r.schedule : []
+      }));
+
       const resp = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify(records)
+        body: JSON.stringify(payload)
       });
+      const out = await resp.json().catch(() => ({}));
+      if(!resp.ok || out.result !== "success"){
+        throw new Error(out.message || `HTTP ${resp.status}`);
+      }
+
+      if(ui){
+        hideOverlay();
+        showToast("完成儲存", "success");
+      }
+      console.log("資料已同步到雲端");
+    } catch(err) {
+      console.error("同步雲端失敗:", err);
+      if(ui){
+        hideOverlay();
+        showToast("儲存失敗：" + err.message, "error", 4200);
+      }
+      alert("同步雲端失敗：" + err.message);
+      throw err;
+    }
+  });
       const out = await resp.json().catch(() => ({}));
       if (!resp.ok || out.result !== "success") {
         throw new Error(out.message || `HTTP ${resp.status}`);
@@ -896,6 +1013,11 @@ startEl.addEventListener("change", () => {
 
       const { id, ym } = t.dataset;
       const rec = records.find(r => r.id === id);
+    if(!rec){
+      alert("找不到這筆維護資料，可能已被刪除或尚未同步。");
+      nav("#/");
+      return;
+    }
       const sch = rec ? findSchedule(rec, ym) : null;
       if (!rec || !sch) return;
 
@@ -1029,7 +1151,7 @@ function setNotesHtml(html){
     if(sch.isDone){
       if(!confirm("取消完工？")) return;
       sch.isDone = false; sch.doneDate = "";
-      await save(); // 同步雲端
+      await save({ui:true,label:"儲存中…"}); // 同步雲端
       renderHome();
     } else {
       openDoneModal(id, ym);
@@ -1042,7 +1164,7 @@ function setNotesHtml(html){
     const sch = findSchedule(rec, modalCtx.ym);
     sch.isDone = !!mIsDone.checked;
     sch.doneDate = sch.isDone ? (mDoneDate.value || todayISO()) : "";
-    await save(); // 同步雲端
+    await save({ui:true,label:"儲存中…"}); // 同步雲端
     doneModal.style.display = "none";
     renderHome();
   });
@@ -1067,14 +1189,14 @@ function setNotesHtml(html){
     const idx = records.findIndex(r => r.id === rec.id);
     if(idx >= 0) records[idx] = rec; else records.unshift(rec);
 
-    await save(); // 同步雲端
+    await save({ui:true,label:"儲存中…"}); // 同步雲端
     nav("#/");
   });
 
   btnDelete.addEventListener("click", async () => {
     if(!confirm("確定刪除？")) return;
     records = records.filter(r => r.id !== editingId);
-    await save(); // 同步雲端
+    await save({ui:true,label:"儲存中…"}); // 同步雲端
     nav("#/");
   });
 
@@ -1096,7 +1218,7 @@ btnClear.addEventListener("click", async () => {
   }
 
   records = [];
-  await save(); // 同步雲端
+  await save({ui:true,label:"儲存中…"}); // 同步雲端
   renderHome();
 });
 
@@ -1107,10 +1229,11 @@ btnClear.addEventListener("click", async () => {
   doneFilter.addEventListener("change", renderHome);
 
   // 初始化：先執行路由，再從雲端抓資料
-  router();
-  load(); 
-
-  // --- 其他輔助 UI 函數 (openEditor, renderEditorYMChips 等) 保持原樣即可 ---
+  document.addEventListener("DOMContentLoaded", () => {
+    router();
+    load();
+  });
+// --- 其他輔助 UI 函數 (openEditor, renderEditorYMChips 等) 保持原樣即可 ---
   function openEditor(id){
   editingId = id;
 
@@ -1132,7 +1255,9 @@ btnClear.addEventListener("click", async () => {
   } else {
     const rec = records.find(r => r.id === id);
     customerEl.value = rec.customer; productEl.value = rec.product;
-    setNotesHtml(""); startEl.value = rec.startDate; endEl.value = rec.endDate;
+    // 回填既有備註到 Quill（可保留原格式）
+    setNotesHtml(rec.notes || "");
+    startEl.value = rec.startDate; endEl.value = rec.endDate;
 
     // 編輯既有資料：預設當作「人工設定」
     endEl.dataset.auto = "0";
@@ -1176,4 +1301,3 @@ btnClear.addEventListener("click", async () => {
 </script>
 </body>
 </html>
-
