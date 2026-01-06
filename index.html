@@ -1015,7 +1015,16 @@ startEl.addEventListener("change", () => {
     const rm = e.target.closest("[data-act='rmYM']");
     if(rm){ editingYMList = editingYMList.filter(x => x !== rm.dataset.ym); renderEditorYMChips(); }
   });
-  btnAddYM.addEventListener("click", () => { if(addYM.value){ editingYMList.push(addYM.value); renderEditorYMChips(); } });
+  btnAddYM.addEventListener("click", () => {
+  if(!addYM.value){
+    alert("請先選擇月份（格式：YYYY-MM，例如 2026-01）");
+    addYM.focus();
+    return;
+  }
+  editingYMList.push(addYM.value);
+  renderEditorYMChips();
+});
+  
   btnResetAuto.addEventListener("click", () => { editingYMList = buildAutoYMList(startEl.value, endEl.value); renderEditorYMChips(); });
   btnCancel.addEventListener("click", () => nav("#/"));
   btnBack.addEventListener("click", () => nav("#/"));
@@ -1031,6 +1040,7 @@ startEl.addEventListener("change", () => {
 </script>
 </body>
 </html>
+
 
 
 
