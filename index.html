@@ -459,10 +459,8 @@
 </div>
 
 <script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbznmfZ1quMslZxY6dftt_83uYqUGTh9THmoIO4LdFx7O9CPl0eKn2vvLP0YqM9nv2jf/exec?token=otsukakh5501398";
 (() => {
-  // 1. 請在此處填入您從 Google Apps Script 部署後取得的網址
-  const API_URL = "https://script.google.com/macros/s/AKfycbznmfZ1quMslZxY6dftt_83uYqUGTh9THmoIO4LdFx7O9CPl0eKn2vvLP0YqM9nv2jf/exec";
-
   /** Helpers **/
   const todayISO = () => new Date().toISOString().slice(0,10);
   const parseISO = (s) => s ? new Date(s + "T00:00:00") : null;
@@ -856,6 +854,7 @@
 </script>
 </body>
 </html>
+
 
 
 
