@@ -511,15 +511,21 @@
   }
 
   // 替換原本的 save：改為傳送到 Google Sheets
-  async function save(){
+    async function save(){
     try {
-      await fetch(API_URL, {
+      const resp = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify(records)
       });
+      const out = await resp.json().catch(() => ({}));
+      if (!resp.ok || out.result !== "success") {
+        throw new Error(out.message || `HTTP ${resp.status}`);
+      }
       console.log("資料已同步到雲端");
     } catch(e) {
-      alert("同步雲端失敗，請檢查網路連線");
+      console.error("同步雲端失敗:", e);
+      alert("同步雲端失敗：" + e.message);
+      throw e;
     }
   }
 
@@ -599,6 +605,35 @@
   const mDoneDate = document.getElementById("mDoneDate");
   const mIsDone = document.getElementById("mIsDone");
   const mSave = document.getElementById("mSave");
+
+    // ===== 必要按鈕事件補齊 =====
+  btnNew.addEventListener("click", () => {
+    if (mode !== "admin") return;
+    nav("#/new");
+  });
+
+  btnImport.addEventListener("click", async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = async () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error("JSON 必須是陣列");
+        records = data;
+        await save();
+        renderHome();
+        alert("匯入完成並已同步雲端。");
+      } catch (e) {
+        alert("匯入失敗：" + e);
+      }
+    };
+    input.click();
+  });
+
 
   /** State **/
   let mode = "admin";
@@ -697,6 +732,100 @@
         </tr>
       `);
     });
+  }
+    // ===== 缺少的 openDoneModal() =====
+  function openDoneModal(recordId, ym) {
+    const rec = records.find(r => r.id === recordId);
+    if (!rec) return;
+
+    const sch = findSchedule(rec, ym);
+    if (!sch) return;
+
+    modalCtx = { recordId, ym };
+
+    mSub.textContent = `${rec.customer}｜${rec.product}｜${ym}`;
+    mIsDone.checked = !!sch.isDone;
+    mDoneDate.value = sch.doneDate || (sch.isDone ? todayISO() : "");
+
+    doneModal.style.display = "flex";
+  }
+
+  // ===== 缺少的 renderCalendar() =====
+  function renderCalendar(list) {
+    const ymStr = monthPick.value || curYM();
+    const [Y, M] = ymStr.split("-").map(Number);
+    const first = new Date(Y, M - 1, 1);
+    const startDow = first.getDay(); // 0=Sun
+    const daysInMonth = new Date(Y, M, 0).getDate();
+
+    // 月曆格：前置空白 + 當月天數，補滿 6 週（42格）較穩
+    const totalCells = 42;
+    const cells = [];
+
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - startDow + 1;
+      const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
+
+      if (!inMonth) {
+        cells.push(`<div class="dayCell" style="background:#fbfbfe"></div>`);
+        continue;
+      }
+
+      // 這一天的任務（用 dueDate = 該月份最後一天 的策略）
+      const tasks = [];
+      for (const r of list) {
+        const sch = findSchedule(r, ymStr);
+        if (!sch) continue;
+
+        const due = parseISO(sch.dueDate);
+        if (!due) continue;
+
+        if (due.getFullYear() === Y && (due.getMonth() + 1) === M && due.getDate() === dayNum) {
+          const dotCls = sch.isDone ? "good" : "warn";
+          tasks.push(`
+            <div class="task" data-act="done" data-id="${esc(r.id)}" data-ym="${esc(ymStr)}">
+              <div class="dot ${dotCls}" style="margin-top:3px"></div>
+              <div>
+                <div class="taskTitle">${esc(r.customer)}</div>
+                <div class="taskSub">${esc(r.product)}｜${sch.isDone ? "已完工" : "未完工"}</div>
+              </div>
+            </div>
+          `);
+        }
+      }
+
+      cells.push(`
+        <div class="dayCell">
+          <div class="dayNum">
+            <span>${dayNum}</span>
+            <span class="pill">${ymStr}</span>
+          </div>
+          ${tasks.join("")}
+        </div>
+      `);
+    }
+
+    calGrid.innerHTML = cells.join("");
+
+    // 行事曆內點任務：直接沿用你表格的完工事件（rowsEl 的 click handler）
+    calGrid.addEventListener("click", (e) => {
+      const t = e.target.closest("[data-act='done']");
+      if (!t) return;
+
+      const { id, ym } = t.dataset;
+      const rec = records.find(r => r.id === id);
+      const sch = rec ? findSchedule(rec, ym) : null;
+      if (!rec || !sch) return;
+
+      if (sch.isDone) {
+        if (!confirm("取消完工？")) return;
+        sch.isDone = false;
+        sch.doneDate = "";
+        save().then(() => renderHome());
+      } else {
+        openDoneModal(id, ym);
+      }
+    }, { once: true });
   }
 
   function filteredList(){
@@ -854,6 +983,7 @@
 </script>
 </body>
 </html>
+
 
 
 
