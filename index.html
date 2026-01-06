@@ -93,10 +93,12 @@
       color: #1849a9;
     }
   .notesCell{
-    max-height: 3.8em;
-    overflow: auto;
-    padding-right: 6px;
-    line-height: 1.3;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .notesCell a{ text-decoration: underline; }
     .card{
@@ -372,7 +374,7 @@
       <h2 id="editTitle">新增/編輯維護</h2>
       <div class="row">
         <button class="btn" id="btnBack" type="button">← 回清單</button>
-        <button type="button" class="btn danger" id="btnDelete" style="display:none">刪除此維護</button>
+        <button type="button" class="btn danger" id="btnDelete" style="display:none">刪除本筆維護</button>
       </div>
     </div>
 
@@ -423,19 +425,17 @@
 
         <div style="margin-top:10px">
           <label>備註</label>
-          <textarea id="notes" placeholder="例如：每季例行資安檢測 / 版本更新 / 備份演練 / 遠端窗口…"></textarea>
-          <!-- Quill 編輯器 -->
+<!-- Quill 編輯器 -->
           <div id="notesEditor" style="height:160px;background:#fff"></div>
           <!-- 用來存 HTML（方便你沿用原本資料結構） -->
-          <input type="hidden" id="notesHtml">
-        </div>
+</div>
 
         <div class="divider"></div>
 
         <div class="row" style="justify-content:space-between">
           <div class="small">提示：修改起迄日會重新計算自動月份；如需例外維護，可再手動加入月份。</div>
           <div class="row">
-            <button type="button" class="btn danger" id="btnDelete" style="display:none">刪除此維護</button>
+            <button type="button" class="btn danger" id="btnDelete2" style="display:none" style="display:none">刪除此維護</button>
             <button type="button" class="btn" id="btnCancel">取消</button>
             <button type="submit" class="btn primary">儲存</button>
           </div>
@@ -635,8 +635,6 @@ await fetch(API_URL, {
   const startEl = document.getElementById("startDate");
   const endEl = document.getElementById("endDate");
   const notesEditorEl = document.getElementById("notesEditor");
-const notesHtmlEl = document.getElementById("notesHtml");
-
 const quill = new Quill(notesEditorEl, {
   theme: "snow",
   modules: {
@@ -770,6 +768,7 @@ startEl.addEventListener("change", () => {
 
   /** Mode & View Switching **/
   modeSeg.addEventListener("click", (e) => {
+　　btnClear.style.display = (mode === "admin") ? "inline-flex" : "none";
     const b = e.target.closest("button[data-mode]");
     if(!b) return;
     mode = b.dataset.mode;
@@ -1079,12 +1078,27 @@ function setNotesHtml(html){
     nav("#/");
   });
 
-  btnClear.addEventListener("click", async () => {
-    if(!confirm("確定清除全部？")) return;
-    records = [];
-    await save(); // 同步雲端
-    renderHome();
-  });
+btnClear.addEventListener("click", async () => {
+  // 只允許管理端操作（避免工程師誤按）
+  if (mode !== "admin") {
+    alert("此功能僅限管理端使用。");
+    return;
+  }
+
+  // 第一道：一般確認
+  if (!confirm("此操作會清空雲端與本機所有維護資料，且無法復原。\n\n確定要繼續嗎？")) return;
+
+  // 第二道：輸入確認文字（防誤觸）
+  const code = prompt('請輸入「清除全部」以確認清空：');
+  if (code !== "清除全部") {
+    alert("確認文字不符，已取消清除。");
+    return;
+  }
+
+  records = [];
+  await save(); // 同步雲端
+  renderHome();
+});
 
   // 搜尋與篩選同步
   qEl.addEventListener("input", renderHome);
@@ -1100,11 +1114,14 @@ function setNotesHtml(html){
   function openEditor(id){
   editingId = id;
 
+  // 只有編輯既有資料時，才顯示「刪除本筆維護」按鈕
+  btnDelete.style.display = id ? "inline-flex" : "none";
+
   // 進入編輯頁時，預設視為「未手動修改迄日」
   endDateManuallyEdited = false;
 
   if(!id){
-    customerEl.value = ""; productEl.value = ""; notesEl.value = "";
+    customerEl.value = ""; productEl.value = ""; setNotesHtml("");
     startEl.value = todayISO();
 
     // 新增時：迄日自動帶出 +1年-1天
@@ -1159,19 +1176,3 @@ function setNotesHtml(html){
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
