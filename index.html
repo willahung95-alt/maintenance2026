@@ -265,12 +265,18 @@
       font-weight:750;
       line-height:1.25;
     }
-    .taskSub{
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.25;
-      margin-top:2px;
-    }
+.taskSub{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.25;
+  margin-top:2px;
+
+  /* 關鍵：完整呈現備註 */
+  white-space: pre-wrap;
+  overflow: visible;
+  max-height: none;
+  overflow-wrap: anywhere;
+}
   </style>
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 </head>
@@ -517,7 +523,17 @@
     try {
       const resp = await fetch(API_URL);
       const data = await resp.json();
-      records = Array.isArray(data) ? data : [];
+      records = (Array.isArray(data) ? data : []).map(r => ({
+  id: r.id || "",
+  customer: r.customer || "",
+  product: r.product || "",
+  startDate: r.startDate || "",
+  endDate: r.endDate || "",
+  // 只保留「編輯器備註」
+  notes: r.notes || "",
+  schedule: Array.isArray(r.schedule) ? r.schedule : []
+}));
+
       renderHome(); // 讀取完畢後渲染畫面
     } catch(e) {
       console.error("讀取雲端資料失敗:", e);
@@ -536,6 +552,20 @@
       if (!resp.ok || out.result !== "success") {
         throw new Error(out.message || `HTTP ${resp.status}`);
       }
+      const payload = records.map(r => ({
+  id: r.id || "",
+  customer: r.customer || "",
+  product: r.product || "",
+  startDate: r.startDate || "",
+  endDate: r.endDate || "",
+  notes: r.notes || "",
+  schedule: Array.isArray(r.schedule) ? r.schedule : []
+}));
+
+await fetch(API_URL, {
+  method: "POST",
+  body: JSON.stringify(payload)
+});
       console.log("資料已同步到雲端");
     } catch(e) {
       console.error("同步雲端失敗:", e);
@@ -1129,6 +1159,7 @@ function setNotesHtml(html){
 </script>
 </body>
 </html>
+
 
 
 
