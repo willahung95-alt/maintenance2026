@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理（v5.2601061124）</title>
+  <title>客戶維護管理（v5.2601061145）</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -271,7 +271,7 @@
 <body>
 <header>
   <div class="title">
-    <h1>客戶維護管理（v5.2601061124）</h1>
+    <h1>客戶維護管理（v5.2601061145）</h1>
     <p>管理端：新增/編輯維護排程。工程師端：可選「清單 / 行事曆」檢視，直接設定完工。</p>
   </div>
 
@@ -607,6 +607,27 @@
   const mIsDone = document.getElementById("mIsDone");
   const mSave = document.getElementById("mSave");
 
+  // ===== 起日 / 迄日 自動推算邏輯 =====
+
+// 使用者手動修改「維護迄日」後，就不要再自動覆寫
+endEl.addEventListener("input", () => {
+  endDateManuallyEdited = true;
+  endEl.dataset.auto = "0";
+});
+
+// 修改「維護起日」：若迄日尚未被手動改過，則自動推算迄日 = +1年-1天
+startEl.addEventListener("change", () => {
+  if (!endDateManuallyEdited || endEl.dataset.auto === "1") {
+    endEl.value = addYearsMinus1Day(startEl.value);
+    endEl.dataset.auto = "1";
+  }
+
+  // 起迄日變更後，同步重算預設維護月份
+  editingYMList = buildAutoYMList(startEl.value, endEl.value);
+  renderEditorYMChips();
+});
+
+
     // ===== 必要按鈕事件補齊 =====
   btnNew.addEventListener("click", () => {
     if (mode !== "admin") return;
@@ -642,6 +663,7 @@
   let editingId = null;
   let editingYMList = [];
   let modalCtx = null;
+  let endDateManuallyEdited = false;
 
   function curYM(){
     const d = new Date();
@@ -949,21 +971,32 @@
   function openEditor(id){
   editingId = id;
 
-  // 只有編輯既有資料時，才顯示「刪除本維護資料」
-  btnDelete.style.display = id ? "inline-flex" : "none";
+  // 進入編輯頁時，預設視為「未手動修改迄日」
+  endDateManuallyEdited = false;
 
   if(!id){
     customerEl.value = ""; productEl.value = ""; notesEl.value = "";
-    startEl.value = todayISO(); endEl.value = addYearsMinus1Day(startEl.value);
+    startEl.value = todayISO();
+
+    // 新增時：迄日自動帶出 +1年-1天
+    endEl.value = addYearsMinus1Day(startEl.value);
+    endEl.dataset.auto = "1";
+
     editingYMList = buildAutoYMList(startEl.value, endEl.value);
   } else {
     const rec = records.find(r => r.id === id);
     customerEl.value = rec.customer; productEl.value = rec.product;
     notesEl.value = rec.notes; startEl.value = rec.startDate; endEl.value = rec.endDate;
+
+    // 編輯既有資料：預設當作「人工設定」
+    endEl.dataset.auto = "0";
+
     editingYMList = (rec.schedule || []).map(s => s.ym);
   }
+
   renderEditorYMChips();
 }
+
   function renderEditorYMChips(){
     const list = Array.from(new Set(editingYMList.filter(Boolean))).sort();
     ymChips.innerHTML = list.map(ym => `<span class="mchip todo">${esc(ym)} <span class="link" data-act="rmYM" data-ym="${esc(ym)}">×</span></span>`).join("");
@@ -988,6 +1021,7 @@
 </script>
 </body>
 </html>
+
 
 
 
