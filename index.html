@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理（v5.2601061550）</title>
+  <title>客戶維護管理（v5.2601081400）</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -188,6 +188,9 @@
     .mchip.done .d{background: var(--good)}
     .mchip.todo{border-color: rgba(247,144,9,.25); background: rgba(247,144,9,.07);}
     .mchip.todo .d{background: var(--warn)}
+
+    .mchip.currenttodo{border-color: rgba(240,68,56,.25); background: rgba(240,68,56,.08);}
+    .mchip.currenttodo .d{background: var(--bad)}
     .mchip.selected{outline: 2px solid rgba(45,108,223,.20);}
 
     .link{color: var(--accent); text-decoration: underline; cursor:pointer}
@@ -338,7 +341,7 @@
 <body>
 <header>
   <div class="title">
-    <h1>客戶維護管理（v5.2601061550）</h1>
+    <h1>客戶維護管理（v5.2601081400）</h1>
     <p>管理端：新增/編輯維護排程。工程師端：可選「清單 / 行事曆」檢視，直接設定完工。</p>
   </div>
 
@@ -389,6 +392,7 @@
             <thead>
               <tr>
                 <th style="width:220px">客戶名稱</th>
+                <th style="width:140px">負責業務</th>
                 <th style="width:160px">產品名稱</th>
                 <th style="width:240px">維護期間</th>
                 <th>預定維護月份</th>
@@ -448,6 +452,19 @@
             </datalist>
           </div>
         </div>
+
+        <div class="grid two" style="margin-top:10px">
+          <div>
+            <label>負責業務</label>
+            <select id="sales" required>
+              <option value="willa">willa</option>
+              <option value="melissa">melissa</option>
+              <option value="Anita">Anita</option>
+            </select>
+          </div>
+          <div></div>
+        </div>
+
 
         <div class="grid two" style="margin-top:10px">
           <div>
@@ -511,15 +528,24 @@
       <div class="grid two">
         <div>
           <label>完工日期</label>
+          <!-- 預設帶入今天，可自行調整 -->
           <input type="date" id="mDoneDate" />
         </div>
-        <div style="display:flex; align-items:end;">
-          <label class="status" style="margin:0">
-            <span class="dot good"></span>
-            <input type="checkbox" id="mIsDone" />
-            已完工
-          </label>
+        <div>
+          <label>工程師</label>
+          <select id="mEngineer">
+            <option value="willa">willa</option>
+            <option value="charlie">charlie</option>
+          </select>
         </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label class="status" style="margin:0">
+          <span class="dot good"></span>
+          <!-- 完工視窗即代表要設定完工：預設已勾選且不需再次操作 -->
+          <input type="checkbox" id="mIsDone" checked style="display:none" />
+          已完工
+        </label>
       </div>
       <div class="divider"></div>
       <div class="row" style="justify-content:flex-end">
@@ -578,6 +604,7 @@
       records = (Array.isArray(data) ? data : []).map(r => ({
   id: r.id || "",
   customer: r.customer || "",
+  sales: r.sales || r.owner || "",
   product: r.product || "",
   startDate: r.startDate || "",
   endDate: r.endDate || "",
@@ -607,6 +634,7 @@
       const payload = records.map(r => ({
   id: r.id || "",
   customer: r.customer || "",
+  sales: r.sales || r.owner || "",
   product: r.product || "",
   startDate: r.startDate || "",
   endDate: r.endDate || "",
@@ -684,6 +712,7 @@ await fetch(API_URL, {
   const formEdit = document.getElementById("formEdit");
   const customerEl = document.getElementById("customer");
   const productEl = document.getElementById("product");
+  const salesEl = document.getElementById("sales");
   const startEl = document.getElementById("startDate");
   const endEl = document.getElementById("endDate");
   const notesEditorEl = document.getElementById("notesEditor");
@@ -713,6 +742,7 @@ const quill = new Quill(notesEditorEl, {
   const mSub = document.getElementById("mSub");
   const mClose = document.getElementById("mClose");
   const mDoneDate = document.getElementById("mDoneDate");
+  const mEngineer = document.getElementById("mEngineer");
   const mIsDone = document.getElementById("mIsDone");
   const mSave = document.getElementById("mSave");
 
@@ -852,13 +882,18 @@ startEl.addEventListener("change", () => {
     
     if(mode === "eng" && engView === "cal") renderCalendar(list);
 
-    rowsEl.innerHTML = list.length ? "" : `<tr><td colspan="7" class="small">無符合條件資料。</td></tr>`;
+    rowsEl.innerHTML = list.length ? "" : `<tr><td colspan="8" class="small">無符合條件資料。</td></tr>`;
     list.forEach(r => {
       rowsEl.insertAdjacentHTML("beforeend", `
         <tr>
           <td><div style="font-weight:800">${esc(r.customer)}</div></td>
+          <td>${esc(r.sales || r.owner || "-")}</td>
           <td>${esc(r.product)}</td>
-          <td class="mono">${esc(r.startDate)} ~ ${esc(r.endDate)}</td>
+          <td>
+  ${esc(r.startDate)} ~<br>
+  ${esc(r.endDate)}
+</td>
+
           <td>${renderPlannedMonths(r, ymStr)}</td>
           <td>${renderNotesCell(r)}</td>
           <td>${renderMonthStatus(r, ymStr)}</td>
@@ -878,8 +913,15 @@ startEl.addEventListener("change", () => {
     modalCtx = { recordId, ym };
 
     mSub.textContent = `${rec.customer}｜${rec.product}｜${ym}`;
-    mIsDone.checked = !!sch.isDone;
-    mDoneDate.value = sch.doneDate || (sch.isDone ? todayISO() : "");
+
+    // 完工視窗：預設就是要設定完工
+    mIsDone.checked = true;
+
+    // 預設帶入今天（可自行調整）；若已有完工日期則回填
+    mDoneDate.value = sch.doneDate || todayISO();
+
+    // 回填工程師；預設 willa
+    if (mEngineer) mEngineer.value = sch.engineer || "willa";
 
     doneModal.style.display = "flex";
   }
@@ -921,7 +963,7 @@ startEl.addEventListener("change", () => {
               <div class="dot ${dotCls}" style="margin-top:3px"></div>
               <div>
                 <div class="taskTitle">${esc(r.customer)}</div>
-                <div class="taskSub">${esc(r.product)}｜${sch.isDone ? "已完工" : "未完工"}</div>
+                <div class="taskSub">${esc(r.product)}｜業務 ${esc(r.sales || r.owner || "-")}｜工程師 ${esc(sch.engineer || "-")}｜${sch.isDone ? "已完工" : "未完工"}</div>
               </div>
             </div>
           `);
@@ -986,8 +1028,9 @@ startEl.addEventListener("change", () => {
     const list = (rec.schedule || []).slice().sort((a,b)=>a.ym.localeCompare(b.ym));
     if(!list.length) return `<span class="small">—</span>`;
     return `<div class="months">` + list.map(s => {
-      const cls = s.isDone ? "mchip done" : "mchip todo";
-      const selected = (s.ym === selectedYM) ? " selected" : "";
+      const isCurrent = (s.ym === selectedYM);
+      const cls = s.isDone ? "mchip done" : (isCurrent ? "mchip currenttodo" : "mchip todo");
+      const selected = isCurrent ? " selected" : "";
       return `<span class="${cls}${selected}"><span class="d"></span>${esc(s.ym)}</span>`;
     }).join("") + `</div>`;
   }
@@ -1051,8 +1094,11 @@ function sanitizeNotesHtml(html){
   function renderMonthStatus(rec, ymStr){
     const sch = findSchedule(rec, ymStr);
     if(!sch) return `<span class="status"><span class="dot neutral"></span>本月無維護</span>`;
-    return sch.isDone ? `<span class="status"><span class="dot good"></span>本月已完工</span>` 
-                      : `<span class="status"><span class="dot warn"></span>本月未完工</span>`;
+    if(sch.isDone){
+      const eng = sch.engineer ? `（工程師 ${esc(sch.engineer)}）` : "";
+      return `<span class="status"><span class="dot good"></span>本月已完工${eng}</span>`;
+    }
+    return `<span class="status"><span class="dot bad"></span>本月未完工</span>`;
   }
   function renderMonthAction(rec, ymStr){
     const sch = findSchedule(rec, ymStr);
@@ -1085,7 +1131,7 @@ function setNotesHtml(html){
 
     if(sch.isDone){
       if(!confirm("取消完工？")) return;
-      sch.isDone = false; sch.doneDate = "";
+      sch.isDone = false; sch.doneDate = ""; sch.engineer = "";
       await save(); // 同步雲端
       renderHome();
     } else {
@@ -1097,8 +1143,10 @@ function setNotesHtml(html){
     if(!modalCtx) return;
     const rec = records.find(r => r.id === modalCtx.recordId);
     const sch = findSchedule(rec, modalCtx.ym);
-    sch.isDone = !!mIsDone.checked;
-    sch.doneDate = sch.isDone ? (mDoneDate.value || todayISO()) : "";
+    // 設定完工：預設即為完工
+    sch.isDone = true;
+    sch.doneDate = (mDoneDate.value || todayISO());
+    sch.engineer = (mEngineer && mEngineer.value) ? mEngineer.value : (sch.engineer || "");
     await save(); // 同步雲端
     doneModal.style.display = "none";
     renderHome();
@@ -1114,6 +1162,7 @@ function setNotesHtml(html){
     const rec = {
       id: existing?.id || newId(),
       customer: customerEl.value.trim(),
+      sales: salesEl.value,
       product: productEl.value.trim(),
       startDate: startEl.value,
       endDate: endEl.value,
@@ -1178,7 +1227,7 @@ btnClear.addEventListener("click", async () => {
   endDateManuallyEdited = false;
 
   if(!id){
-    customerEl.value = ""; productEl.value = ""; setNotesHtml("");
+    customerEl.value = ""; productEl.value = ""; salesEl.value = "willa"; setNotesHtml("");
     startEl.value = todayISO();
 
     // 新增時：迄日自動帶出 +1年-1天
@@ -1188,7 +1237,7 @@ btnClear.addEventListener("click", async () => {
     editingYMList = buildAutoYMList(startEl.value, endEl.value);
   } else {
     const rec = records.find(r => r.id === id);
-    customerEl.value = rec.customer; productEl.value = rec.product;
+    customerEl.value = rec.customer; salesEl.value = (rec.sales || rec.owner || "willa"); productEl.value = rec.product;
     // 回填既有備註到 Quill（可保留原格式）
     setNotesHtml(rec.notes || "");
     startEl.value = rec.startDate; endEl.value = rec.endDate;
@@ -1246,20 +1295,3 @@ btnClear.addEventListener("click", async () => {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
