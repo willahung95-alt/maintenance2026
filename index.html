@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理系統 | v6.0113</title>
+  <title>客戶維護管理系統</title>
   
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
@@ -14,8 +14,9 @@
     :root {
       --primary: #4361ee; --primary-light: #eef2ff; --success: #10b981;
       --success-light: #e8f7f0; --success-dark: #065f46;
-      --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
-      --text-muted: #64748b; --bg-body: #f8fafc; --card-bg: #ffffff;
+      --warning: #f59e0b; --danger: #ef4444; 
+      --text-main: #1e293b; --text-muted: #64748b; --text-soft: #334155;
+      --bg-body: #f8fafc; --card-bg: #ffffff;
       --border: #e2e8f0; --radius-lg: 16px; --radius-md: 12px;
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     }
@@ -25,15 +26,16 @@
     header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
     .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; color: var(--primary); }
     
-    #versionTag { margin-left: 8px; font-size: 11px; color: var(--primary); background: var(--primary-light); padding: 3px 8px; border-radius: 20px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-    #versionTag:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2); }
+    #versionTag { margin-left: 8px; font-size: 11px; color: var(--primary); background: var(--primary-light); padding: 3px 8px; border-radius: 20px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: 0.2s; user-select: none; }
+    #versionTag:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2); transform: translateY(-1px); }
 
     main { max-width: 1550px; margin: 1.5rem auto; padding: 0 1rem; }
+    
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
     .stat-card { background: var(--card-bg); padding: 1.25rem; border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; border: 1px solid var(--border); }
     .stat-icon { width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .stat-info .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2px; }
-    .stat-info .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; color: #334155; }
+    .stat-info .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2px; font-weight: 500; }
+    .stat-info .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--text-soft); letter-spacing: -1px; }
 
     .controls { display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: center; }
     .search-wrapper { flex: 1; position: relative; }
@@ -41,6 +43,7 @@
     .btn { padding: 8px 16px; border-radius: var(--radius-md); border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
     .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
     .btn-primary { background: var(--primary); color: white; }
+    .btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
     .table-container { background: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -48,71 +51,63 @@
     td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     
     .col-customer { width: 18%; }
-    .col-product  { width: 12%; }
+    .col-product  { width: 16%; } /* 增加寬度以容納三個標籤 */
     .col-period   { width: 15%; }
-    .col-schedule { width: 34%; } 
+    .col-schedule { width: 30%; } 
     .col-status   { width: 11%; }
     .col-action   { width: 10%; }
     th.col-action { text-align: right; padding-right: 24px; }
 
-    .sales-tag { background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-top: 4px; }
+    /* 業務標籤：淺藍色  */
+    .sales-tag { background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-top: 4px; margin-right: 4px; }
+    /* 維護工程師標籤：淺橘色  */
+    .engineer-tag { background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-top: 4px; }
+    
     .month-group { display: flex; flex-wrap: wrap; gap: 3px; }
     .month-chip { padding: 2px 4px; border-radius: 3px; font-size: 11px; background: #f1f5f9; color: var(--text-muted); border: 1px solid var(--border); min-width: 32px; text-align: center; }
     .month-chip.is-done { background: var(--success-light); color: var(--success-dark); border-color: #a7f3d0; }
     .month-chip.active { border: 1.5px solid var(--primary); font-weight: 700; color: var(--primary); background: #fff; }
 
-    .done-status-box { background: var(--success-light); color: var(--success-dark); padding: 6px 12px; border-radius: 8px; border: 1px solid #c6f6d5; display: inline-flex; flex-direction: column; min-width: 105px; }
+    .done-status-box { background: var(--success-light); color: var(--success-dark); padding: 6px 12px; border-radius: 8px; display: inline-flex; flex-direction: column; border: 1px solid #c6f6d5; min-width: 105px; }
     .done-status-box .status-title { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 4px; }
-    .done-status-box .status-meta { font-size: 11px; opacity: 0.85; }
+    .done-status-box .status-meta { font-size: 11px; opacity: 0.85; font-weight: 500; white-space: nowrap; }
 
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; display: none; }
+    .note-indicator { color: #94a3b8; cursor: pointer; margin-left: 6px; vertical-align: middle; font-size: 18px; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 999; display: none; }
     .drawer { position: fixed; right: -100%; top: 0; width: 100%; max-width: 650px; height: 100%; background: white; z-index: 1000; transition: right 0.3s ease; padding: 2rem; overflow-y: auto; }
     .drawer.open { right: 0; }
-    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; padding: 1.5rem; border-radius: var(--radius-lg); z-index: 1100; width: 90%; max-width: 450px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; padding: 1.5rem; border-radius: var(--radius-lg); z-index: 1100; width: 90%; max-width: 400px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
     
-    /* 密碼輸入框樣式 */
-    .password-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 15px; }
-    .password-wrapper input { width: 100%; padding: 12px 45px 12px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; outline: none; }
-    .password-wrapper input:focus { border-color: var(--primary); }
-    .password-toggle { position: absolute; right: 12px; cursor: pointer; color: var(--text-muted); user-select: none; }
+    .ym-manager { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: #f8fafc; }
+    .ym-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .ym-tag { background: white; border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
 
-    #editor-container { font-size: 16px; height: 400px; background: white; }
-    .changelog-content { max-height: 400px; overflow-y: auto; padding: 10px; line-height: 1.6; border: 1px solid var(--border); border-radius: 8px; margin: 15px 0; background: #fafafa; }
+    #editor-container { height: 350px; font-size: 16px; }
+    #note-viewer { line-height: 1.6; color: var(--text-main); }
+    #note-viewer ul, #note-viewer ol { padding-left: 20px; }
+    #note-viewer blockquote { border-left: 4px solid #ccc; margin-left: 0; padding-left: 10px; color: #666; }
   </style>
 </head>
 <body>
 
-  <div class="overlay" id="authOverlay" style="display: block; background: rgba(0,0,0,0.8);"></div>
-  <div class="modal" id="authModal" style="display: block;">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <span class="material-symbols-rounded" style="font-size: 48px; color: var(--primary);">lock</span>
-      <h3 id="authTitle" style="margin: 10px 0;">系統身分驗證</h3>
-      <p id="authDesc" style="font-size: 0.9rem; color: var(--text-muted);">請輸入維護系統存取密碼</p>
-    </div>
-    <div class="password-wrapper">
-      <input type="password" id="authPwdInput" placeholder="請輸入密碼">
-      <span class="material-symbols-rounded password-toggle" onclick="togglePwdVisibility('authPwdInput', this)">visibility</span>
-    </div>
-    <button onclick="handleAuthSubmit()" class="btn btn-primary" style="width: 100%; padding: 12px; justify-content: center;">確認送出</button>
+<header>
+  <div class="logo">
+    <span class="material-symbols-rounded">analytics</span> 
+    客戶維護管理系統
+    <span id="versionTag" onclick="openSystemLog('view')" title="點擊查看更新日誌">v6.01091700</span>
   </div>
-
-  <header>
-    <div class="logo">
-      <span class="material-symbols-rounded">analytics</span> 
-      客戶維護管理系統
-      <span id="versionTag" onclick="showVersionLog()">v6.0113</span>
+  <div style="display:flex; gap:10px;">
+    <div id="modeSeg" style="display:flex; background:var(--primary-light); padding:4px; border-radius:100px;">
+      <button class="mode-btn btn active" data-mode="user">檢視模式</button>
+      <button class="mode-btn btn" data-mode="admin">管理模式</button>
     </div>
-    <div style="display:flex; gap:10px;">
-      <div id="modeSeg" style="display:flex; background:var(--primary-light); padding:4px; border-radius:100px;">
-        <button class="mode-btn btn active" data-mode="user">檢視模式</button>
-        <button class="mode-btn btn" data-mode="admin">管理模式</button>
-      </div>
-      <div id="adminControls" style="display:none; gap:10px;">
-        <button class="btn btn-outline" onclick="openVersionEditor()"><span class="material-symbols-rounded">history_edu</span>編輯更新內容</button>
-        <button class="btn btn-primary" onclick="openEdit()"><span class="material-symbols-rounded">add</span>新增維護</button>
-      </div>
+    <div id="adminControls" style="display:none; gap:10px;">
+      <button class="btn btn-outline" onclick="openSystemLog('edit')"><span class="material-symbols-rounded">history_edu</span>編輯日誌</button>
+      <button class="btn btn-primary" onclick="openEdit()"><span class="material-symbols-rounded">add</span>新增維護</button>
     </div>
-  </header>
+  </div>
+</header>
 
   <main>
     <div class="stats-row">
@@ -137,7 +132,7 @@
     <div class="controls">
       <div class="search-wrapper">
         <span class="material-symbols-rounded" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted);">search</span>
-        <input type="text" id="q" placeholder="搜尋客戶名稱、業務、產品..." style="width:100%; padding:10px 16px 10px 40px; border-radius:var(--radius-md); border:1px solid var(--border); outline:none;">
+        <input type="text" id="q" placeholder="搜尋客戶名稱、業務、產品、工程師..." style="width:100%; padding:10px 16px 10px 40px; border-radius:var(--radius-md); border:1px solid var(--border); outline:none;">
       </div>
       <input type="month" id="monthPick" class="btn btn-outline">
       <select id="scope" class="btn btn-outline">
@@ -151,8 +146,7 @@
         <thead>
           <tr>
             <th class="col-customer">客戶名稱</th>
-            <th class="col-product">產品 / 業務</th>
-            <th class="col-period">維護期間</th>
+            <th class="col-product">產品 / 業務 / 維護工程師</th> <th class="col-period">維護期間</th>
             <th class="col-schedule">全期進度</th>
             <th class="col-status">狀態</th>
             <th class="col-action">操作</th>
@@ -164,6 +158,7 @@
   </main>
 
   <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  
   <div class="drawer" id="drawer">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
       <h2 id="drawerTitle" style="margin:0">維護編輯</h2>
@@ -172,31 +167,69 @@
     <form id="formEdit">
       <div id="adminOnlyFields">
         <div style="margin-bottom:12px;"><label style="font-size:0.85rem; font-weight:600;">客戶名稱</label><input type="text" id="customer" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;" required></div>
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
-          <div><label style="font-size:0.85rem;">產品</label><select id="product" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"><option value="ee-class">ee-class</option><option value="Adobe Connect">Adobe Connect</option><option value="km+">km+</option><option value="tms+">tms+</option></select></div>
-          <div><label style="font-size:0.85rem;">業務</label><select id="salesName" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"><option value="Willa">Willa</option><option value="Melissa">Melissa</option><option value="Anita">Anita</option></select></div>
+          <div>
+            <label style="font-size:0.85rem;">產品</label>
+            <select id="product" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
+                <option value="ee-class">ee-class</option>
+                <option value="Adobe Connect">Adobe Connect</option>
+                <option value="km+">km+</option>
+                <option value="tms+">tms+</option>
+                <option value="i-reporter">i-reporter</option>
+                <option value="HyperPDM">HyperPDM</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.85rem;">業務</label>
+            <select id="salesName" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
+                <option value="Willa">Willa</option>
+                <option value="Melissa">Melissa</option>
+                <option value="Anita">Anita</option>
+                <option value="Mandy">Mandy</option>
+                <option value="Annie">Annie</option>
+                <option value="Emerald">Emerald</option>
+                <option value="Anyen">Anyen</option>
+                <option value="Jenny">Jenny</option>
+            </select>
+          </div>
         </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="font-size:0.85rem;">維護工程師</label>
+            <select id="engineer" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
+                <option value="">請選擇</option>
+                <option value="Willa">Willa</option>
+                <option value="Charlie">Charlie</option>
+                <option value="Lindsay">Lindsay</option>
+                <option value="Johnson">Johnson</option>
+                <option value="Isaac">Isaac</option>
+            </select>
+        </div>
+
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
           <div><label style="font-size:0.85rem;">維護起日</label><input type="date" id="startDate" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);" onchange="handleDateChange()"></div>
           <div><label style="font-size:0.85rem;">維護訖日</label><input type="date" id="endDate" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"></div>
         </div>
         <div class="ym-manager">
-          <label style="font-size:0.85rem; font-weight:600;">維護月份管理</label>
+          <label style="font-size:0.85rem; font-weight:600;">維護月份管理 (起月+3起算)</label>
           <div style="display:flex; gap:5px; margin-top:5px;">
             <input type="month" id="manualYM" class="btn btn-outline" style="flex:1">
             <button type="button" class="btn btn-outline" onclick="addYM()">手動新增</button>
           </div>
-          <div class="ym-list" id="ymList" style="display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap;"></div>
+          <div class="ym-list" id="ymList"></div>
         </div>
       </div>
+
       <div style="margin-top:20px; margin-bottom:12px;">
         <label id="noteLabel" style="font-size:0.85rem; font-weight:600;">內容編輯</label>
         <div id="editor-wrapper"><div id="editor-container"></div></div>
         <div id="note-viewer" style="display:none; padding:15px; border:1px solid var(--border); border-radius:8px; background:#fff; min-height:100px;"></div>
       </div>
+
       <div id="adminAction" style="display:none;">
-        <button type="submit" class="btn btn-primary" style="width:100%; padding:12px; justify-content: center;">儲存並同步至資料庫</button>
-        <button type="button" id="btnDelete" class="btn btn-outline" style="width:100%; margin-top:10px; color:var(--danger); justify-content: center;">刪除紀錄</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:12px;">儲存並同步至資料庫</button>
+        <button type="button" id="btnDelete" class="btn btn-outline" style="width:100%; margin-top:10px; color:var(--danger);">刪除紀錄</button>
       </div>
     </form>
   </div>
@@ -204,169 +237,33 @@
   <div class="modal" id="doneModal">
     <h3 style="margin-top:0;">完工申報</h3>
     <div style="margin-bottom:10px;"><label>實際完工日</label><input type="date" id="mDoneDate" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></div>
-    <div style="margin-bottom:15px;"><label>維護工程師</label><select id="mEngName" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"><option value="Willa">Willa</option><option value="Charlie">Charlie</option></select></div>
-    <div style="display:flex; gap:10px;"><button id="mSave" class="btn btn-primary" style="flex:1; justify-content: center;">提交</button><button onclick="closeModal()" class="btn btn-outline" style="flex:1; justify-content: center;">取消</button></div>
-  </div>
-
-  <div class="modal" id="versionModal">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0;">系統更新日誌</h3>
-      <span id="modalVerTag" style="font-size:12px; color:var(--text-muted);"></span>
-    </div>
-    <div class="changelog-content" id="changelogHtml">讀取中...</div>
-    <button onclick="closeModal()" class="btn btn-primary" style="width:100%; justify-content: center;">關閉視窗</button>
+    <div style="margin-bottom:15px;"><label>維護工程師 (執行者)</label><select id="mEngName" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"><option value="Willa">Willa</option><option value="Charlie">Charlie</option><option value="Lindsay">Lindsay</option><option value="Johnson">Johnson</option><option value="Isaac">Isaac</option></select></div>
+    <div style="display:flex; gap:10px;"><button id="mSave" class="btn btn-primary" style="flex:1;">提交</button><button onclick="closeModal()" class="btn btn-outline" style="flex:1;">取消</button></div>
   </div>
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbznmfZ1quMslZxY6dftt_83uYqUGTh9THmoIO4LdFx7O9CPl0eKn2vvLP0YqM9nv2jf/exec?token=otsukakh5501398";
-  const VERSION_ID = "SYSTEM_LOG_v6";
-  const ADMIN_PASSWORD = "oitc16088678"; // 與 GAS 一致
-  
-  let records = [], mode = "user", editingId = null, quill, modalTarget = null, editingYMList = [], authCallback = null;
+  const ADMIN_PASSWORD = "admin5501398";
+  const VERSION_ID = "SYSTEM_LOG_v6"; 
 
-  // --- 密碼切換顯示功能 ---
-  function togglePwdVisibility(inputId, iconEl) {
-    const input = document.getElementById(inputId);
-    if (input.type === "password") {
-      input.type = "text";
-      iconEl.textContent = "visibility_off";
-    } else {
-      input.type = "password";
-      iconEl.textContent = "visibility";
-    }
-  }
-
-  // --- 自定義驗證流程 ---
-  function handleAuthSubmit() {
-    const pwd = document.getElementById('authPwdInput').value;
-    if (!pwd) return;
-    
-    // 如果是初始登入讀取
-    if (!authCallback) {
-      sessionStorage.setItem('sys_pwd', pwd);
-      document.getElementById('authOverlay').style.display = 'none';
-      document.getElementById('authModal').style.display = 'none';
-      load();
-    } else {
-      // 如果是切換管理權限
-      if (pwd === ADMIN_PASSWORD) {
-        document.getElementById('authOverlay').style.display = 'none';
-        document.getElementById('authModal').style.display = 'none';
-        authCallback(true);
-      } else {
-        alert("密碼錯誤，拒絕存取管理者權限！");
-      }
-    }
-    document.getElementById('authPwdInput').value = ''; // 清空
-  }
+  let records = [], mode = "user", editingId = null, quill, modalTarget = null, editingYMList = [];
+  let systemLog = { id: VERSION_ID, notes: '尚無更新紀錄' };
 
   async function load() {
-    const pwd = sessionStorage.getItem('sys_pwd');
+    let pwd = sessionStorage.getItem('sys_pwd') || prompt("🔒 請輸入系統密碼：");
+    if (!pwd) { location.reload(); return; }
     try {
       const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`);
       const data = await resp.json();
-      if (data.status === "error") {
-        sessionStorage.removeItem('sys_pwd');
-        document.getElementById('authOverlay').style.display = 'block';
-        document.getElementById('authModal').style.display = 'block';
-        document.getElementById('authDesc').textContent = "密碼錯誤，請重新輸入系統密碼";
-        return;
-      }
+      if (data.status === "error") { sessionStorage.removeItem('sys_pwd'); location.reload(); return; }
+      sessionStorage.setItem('sys_pwd', pwd);
+      
+      const logIdx = data.findIndex(r => r.id === VERSION_ID);
+      if (logIdx >= 0) { systemLog = data[logIdx]; data.splice(logIdx, 1); }
       records = data; 
       document.body.style.display = "block"; 
       render();
     } catch (e) { alert("連線失敗，請檢查網路。"); }
-  }
-
-  // --- 修改切換模式邏輯 ---
-  document.getElementById('modeSeg').onclick = (e) => {
-    const b = e.target.closest('button'); if(!b) return;
-    const targetMode = b.dataset.mode;
-    
-    if (targetMode === 'admin') {
-      document.getElementById('authOverlay').style.display = 'block';
-      document.getElementById('authModal').style.display = 'block';
-      document.getElementById('authTitle').textContent = "管理權限驗證";
-      document.getElementById('authDesc').textContent = "進入管理模式需要再次驗證密碼";
-      authCallback = (success) => {
-        if (success) {
-          mode = "admin";
-          updateModeUI();
-        }
-      };
-    } else {
-      mode = "user";
-      updateModeUI();
-    }
-  };
-
-  function updateModeUI() {
-    document.querySelectorAll('.mode-btn').forEach(x => {
-      x.classList.toggle('active', x.dataset.mode === mode);
-    });
-    document.getElementById('adminControls').style.display = mode === 'admin' ? 'flex' : 'none';
-    render();
-  }
-
-  // --- 以下為原本的功能邏輯 (維持不變) ---
-  function showVersionLog() {
-    const logData = records.find(r => r.id === VERSION_ID);
-    document.getElementById('modalVerTag').textContent = document.getElementById('versionTag').textContent;
-    document.getElementById('changelogHtml').innerHTML = logData ? logData.notes : "尚無更新紀錄";
-    document.getElementById('versionModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function openVersionEditor() {
-    editingId = VERSION_ID;
-    const logData = records.find(r => r.id === VERSION_ID) || { id: VERSION_ID, notes: "" };
-    document.getElementById('drawerTitle').textContent = "編輯系統日誌";
-    document.getElementById('adminOnlyFields').style.display = 'none';
-    document.getElementById('btnDelete').style.display = 'none';
-    document.getElementById('adminAction').style.display = 'block';
-    document.getElementById('noteLabel').textContent = "日誌內容";
-    document.getElementById('editor-wrapper').style.display = 'block';
-    document.getElementById('note-viewer').style.display = 'none';
-    quill.root.innerHTML = logData.notes || "";
-    document.getElementById('drawer').classList.add('open');
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function handleDateChange() {
-    const startVal = document.getElementById('startDate').value;
-    if(!startVal) return;
-    const startDate = new Date(startVal);
-    const endDate = new Date(startVal);
-    endDate.setFullYear(startDate.getFullYear() + 1);
-    endDate.setDate(endDate.getDate() - 1);
-    document.getElementById('endDate').value = endDate.toISOString().slice(0, 10);
-    editingYMList = [];
-    [3, 6, 9, 12].forEach(offset => {
-      const d = new Date(startDate.getFullYear(), startDate.getMonth() + offset, 1);
-      editingYMList.push(d.toISOString().slice(0, 7));
-    });
-    renderYMList();
-  }
-
-  function addYM() {
-    const val = document.getElementById('manualYM').value;
-    if(val && !editingYMList.includes(val)) {
-      editingYMList.push(val);
-      editingYMList.sort();
-      renderYMList();
-    }
-  }
-
-  function removeYM(ym) {
-    editingYMList = editingYMList.filter(x => x !== ym);
-    renderYMList();
-  }
-
-  function renderYMList() {
-    const container = document.getElementById('ymList');
-    container.innerHTML = editingYMList.map(ym => `
-      <div style="background:var(--primary-light); color:var(--primary); padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">${ym} <span onclick="removeYM('${ym}')" style="cursor:pointer; margin-left:5px; color:var(--danger);">×</span></div>
-    `).join('');
   }
 
   function render() {
@@ -375,21 +272,19 @@
     const q = document.getElementById('q').value.toLowerCase();
     const scope = document.getElementById('scope').value;
 
-    const mainRecords = records.filter(r => r.id !== VERSION_ID);
-    const filtered = mainRecords.filter(r => {
-      const match = !q || r.customer.toLowerCase().includes(q) || (r.salesName||"").toLowerCase().includes(q) || r.product.toLowerCase().includes(q);
+    const filtered = records.filter(r => {
+      // 搜尋條件加入工程師 [cite: 106]
+      const match = !q || r.customer.toLowerCase().includes(q) || (r.salesName||"").toLowerCase().includes(q) || (r.engineer||"").toLowerCase().includes(q) || r.product.toLowerCase().includes(q);
       const hasSch = (r.schedule || []).some(s => s.ym === ym);
       return (scope === 'need' ? hasSch : true) && match;
     }).sort((a,b) => a.customer.localeCompare(b.customer, 'zh-Hant'));
 
-    document.getElementById('statTotal').textContent = mainRecords.length;
-    const doneCount = mainRecords.filter(r => r.schedule?.some(s => s.ym === ym && (s.isDone || s.ym < currentYM))).length;
-    const todoCount = mainRecords.filter(r => r.schedule?.some(s => s.ym === ym && (!s.isDone && s.ym >= currentYM))).length;
-    const rate = (doneCount + todoCount) > 0 ? Math.round((doneCount / (doneCount + todoCount)) * 100) : 0;
-
+    document.getElementById('statTotal').textContent = records.length;
+    const doneCount = records.filter(r => r.schedule?.some(s => s.ym === ym && (s.isDone || s.ym < currentYM))).length;
+    const todoCount = records.filter(r => r.schedule?.some(s => s.ym === ym && (!s.isDone && s.ym >= currentYM))).length;
     document.getElementById('statDone').textContent = doneCount;
     document.getElementById('statTodo').textContent = todoCount;
-    document.getElementById('statRate').textContent = rate + "%";
+    document.getElementById('statRate').textContent = (doneCount + todoCount) > 0 ? Math.round((doneCount / (doneCount + todoCount)) * 100) + "%" : "0%";
 
     const tbody = document.getElementById('rows');
     tbody.innerHTML = '';
@@ -398,10 +293,16 @@
       const sch = (r.schedule || []).find(s => s.ym === ym);
       const hasNotes = r.notes && r.notes !== '<p><br></p>';
       
+      // 列表顯示業務與工程師標籤 
+      const salesTag = r.salesName ? `<span class="sales-tag" title="業務">${r.salesName}</span>` : '';
+      const engTag = r.engineer ? `<span class="engineer-tag" title="維護工程師">${r.engineer}</span>` : '';
+
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
-          <td><span style="font-weight:700;">${r.customer}</span>${hasNotes ? `<span class="material-symbols-rounded note-indicator" style="cursor:pointer; margin-left:8px; vertical-align:middle; color:var(--text-muted); font-size:18px;" onclick="openEdit('${r.id}', true)">description</span>` : ''}</td>
-          <td><div style="font-size:0.8rem; color:var(--text-muted);">${r.product}</div><span class="sales-tag">${r.salesName}</span></td>
+          <td><span style="font-weight:700;">${r.customer}</span>${hasNotes ? `<span class="material-symbols-rounded note-indicator" onclick="openEdit('${r.id}', true)">description</span>` : ''}</td>
+          <td>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">${r.product}</div>
+            <div>${salesTag}${engTag}</div> </td>
           <td style="font-size:0.85rem; color:var(--text-muted);">${r.startDate} ~ ${r.endDate}</td>
           <td>
             <div class="month-group">
@@ -430,20 +331,91 @@
     });
   }
 
+  async function save() {
+    const btn = document.querySelector('#formEdit .btn-primary');
+    const mSaveBtn = document.getElementById('mSave');
+    let activeBtn = null;
+    let originalText = "";
+
+    if (document.getElementById('drawer').classList.contains('open') && btn) activeBtn = btn;
+    else if (document.getElementById('doneModal').style.display === 'block' && mSaveBtn) activeBtn = mSaveBtn;
+
+    if (activeBtn) {
+        originalText = activeBtn.innerText;
+        activeBtn.innerText = "儲存中...";
+        activeBtn.disabled = true;
+    }
+
+    try {
+      const pwd = sessionStorage.getItem('sys_pwd');
+      const payload = [...records, systemLog];
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
+        method: "POST", 
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!resp.ok) throw new Error("Network response was not ok");
+      const result = await resp.json();
+      if (result.result === "error") throw new Error(result.message);
+
+      render();
+    } catch (e) {
+      alert("儲存程序已執行，但回應逾時或發生錯誤。\n請重新整理頁面確認資料是否正確更新。");
+    } finally {
+      if (activeBtn) {
+          activeBtn.innerText = originalText;
+          activeBtn.disabled = false;
+      }
+    }
+  }
+
+  function handleDateChange() {
+    const startVal = document.getElementById('startDate').value;
+    if(!startVal) return;
+    const startDate = new Date(startVal);
+    const endDate = new Date(startVal);
+    endDate.setFullYear(startDate.getFullYear() + 1);
+    endDate.setDate(endDate.getDate() - 1);
+    document.getElementById('endDate').value = endDate.toISOString().slice(0, 10);
+    editingYMList = [3, 6, 9, 12].map(offset => {
+      const d = new Date(startDate.getFullYear(), startDate.getMonth() + offset, 1);
+      return d.toISOString().slice(0, 7);
+    });
+    renderYMList();
+  }
+
+  function addYM() {
+    const val = document.getElementById('manualYM').value;
+    if(val && !editingYMList.includes(val)) { editingYMList.push(val); editingYMList.sort(); renderYMList(); }
+  }
+  function removeYM(ym) { editingYMList = editingYMList.filter(x => x !== ym); renderYMList(); }
+  function renderYMList() {
+    document.getElementById('ymList').innerHTML = editingYMList.map(ym => `
+      <div class="ym-tag">${ym} <span onclick="removeYM('${ym}')" style="cursor:pointer; color:var(--danger); font-weight:bold;">×</span></div>
+    `).join('');
+  }
+
   function openEdit(id = null, forceReadOnly = false) {
+    document.getElementById('adminOnlyFields').style.display = 'block';
+    document.getElementById('adminAction').style.display = 'block';
     editingId = id;
-    const r = records.find(x => x.id === id) || { customer:"", product:"ee-class", salesName:"Willa", startDate:"", endDate:"", notes:"", schedule: [] };
+    const r = records.find(x => x.id === id) || { customer:"", product:"ee-class", salesName:"Willa", engineer:"", startDate:"", endDate:"", notes:"", schedule: [] }; // 加入預設工程師 [cite: 120]
     const isViewOnly = forceReadOnly || mode === 'user';
+    
     document.getElementById('adminOnlyFields').style.display = isViewOnly ? 'none' : 'block';
     document.getElementById('adminAction').style.display = isViewOnly ? 'none' : 'block';
     document.getElementById('btnDelete').style.display = (isViewOnly || !id) ? 'none' : 'block';
-    document.getElementById('noteLabel').textContent = "維護備註";
     document.getElementById('drawerTitle').textContent = isViewOnly ? "備註內容" : (id ? "編輯維護" : "新增維護");
     
     if(isViewOnly) {
       document.getElementById('editor-wrapper').style.display = 'none';
       document.getElementById('note-viewer').style.display = 'block';
-      document.getElementById('note-viewer').innerHTML = r.notes || '<span style="color:#94a3b8">尚無備註</span>';
+      document.getElementById('note-viewer').innerHTML = r.notes || "尚無備註";
     } else {
       document.getElementById('editor-wrapper').style.display = 'block';
       document.getElementById('note-viewer').style.display = 'none';
@@ -453,6 +425,7 @@
     document.getElementById('customer').value = r.customer || "";
     document.getElementById('product').value = r.product || "ee-class";
     document.getElementById('salesName').value = r.salesName || "Willa";
+    document.getElementById('engineer').value = r.engineer || ""; // 讀取工程師 [cite: 126]
     document.getElementById('startDate').value = r.startDate || "";
     document.getElementById('endDate').value = r.endDate || "";
     editingYMList = (r.schedule || []).map(s => s.ym);
@@ -461,42 +434,52 @@
     document.getElementById('overlay').style.display = 'block';
   }
 
-  async function save() {
-    const pwd = sessionStorage.getItem('sys_pwd');
-    const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
-      method: "POST", 
-      body: JSON.stringify(records) 
-    });
-    const res = await resp.json();
-    if(res.result === 'success') { render(); } else { throw new Error(); }
+  function openSystemLog(action) {
+    editingId = VERSION_ID;
+    document.getElementById('drawerTitle').textContent = "系統更新日誌";
+    document.getElementById('adminOnlyFields').style.display = 'none';
+    document.getElementById('btnDelete').style.display = 'none';
+    if (action === 'view') {
+        document.getElementById('adminAction').style.display = 'none';
+        document.getElementById('editor-wrapper').style.display = 'none';
+        document.getElementById('note-viewer').style.display = 'block';
+        document.getElementById('note-viewer').innerHTML = systemLog.notes || '尚無紀錄';
+    } else {
+        document.getElementById('adminAction').style.display = 'block';
+        document.getElementById('editor-wrapper').style.display = 'block';
+        document.getElementById('note-viewer').style.display = 'none';
+        quill.root.innerHTML = systemLog.notes || "";
+    }
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').style.display = 'block';
   }
 
   document.getElementById('formEdit').onsubmit = async (e) => {
     e.preventDefault();
     const currentYM = new Date().toISOString().slice(0, 7);
-    let targetData;
     if (editingId === VERSION_ID) {
-      targetData = { id: VERSION_ID, customer: "系統更新日誌(系統紀錄)", product: "SYSTEM", salesName: "Admin", startDate: "2020-01-01", endDate: "2099-12-31", notes: quill.root.innerHTML, schedule: [] };
-    } else {
-      targetData = {
-        id: editingId || 'ID-' + Date.now(),
-        customer: document.getElementById('customer').value,
-        product: document.getElementById('product').value,
-        salesName: document.getElementById('salesName').value,
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        notes: quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML,
-        schedule: editingYMList.map(ym => {
-          const old = (records.find(x => x.id === editingId)?.schedule || []).find(s => s.ym === ym);
-          if (old) return old;
-          const isPast = ym < currentYM;
-          return { ym, isDone: isPast, doneDate: isPast ? currentYM : "", engName: isPast ? "Auto" : "" };
-        })
-      };
+        systemLog.notes = quill.root.innerHTML;
+        await save(); closeDrawer(); return;
     }
-    const idx = records.findIndex(x => x.id === targetData.id);
-    if (idx !== -1) records[idx] = targetData; else records.push(targetData);
-    try { await save(); closeDrawer(); alert("儲存成功！"); } catch (err) { alert("儲存失敗"); }
+    const rData = {
+      id: editingId || 'ID-' + Date.now(), // 儲存工程師資料 [cite: 144]
+      customer: document.getElementById('customer').value,
+      product: document.getElementById('product').value,
+      salesName: document.getElementById('salesName').value,
+      engineer: document.getElementById('engineer').value, // 新增工程師欄位
+      startDate: document.getElementById('startDate').value,
+      endDate: document.getElementById('endDate').value,
+      notes: quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML,
+      schedule: editingYMList.map(ym => {
+        const old = (records.find(x => x.id === editingId)?.schedule || []).find(s => s.ym === ym);
+        if (old) return old;
+        const isPast = ym < currentYM;
+        return { ym, isDone: isPast, doneDate: isPast ? currentYM : "", engName: isPast ? "Auto" : "" };
+      })
+    };
+    const idx = records.findIndex(x => x.id === rData.id);
+    if (idx !== -1) records[idx] = rData; else records.push(rData);
+    await save(); closeDrawer();
   };
 
   function toggleDone(id, ym) {
@@ -514,38 +497,32 @@
   }
 
   function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; closeModal(); }
-  function closeModal() { document.querySelectorAll('.modal:not(#authModal)').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
+  function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
+  document.getElementById('btnDelete').onclick = async () => { if(confirm("確定刪除此客戶？")) { records = records.filter(x => x.id !== editingId); await save(); closeDrawer(); } };
 
   document.getElementById('mSave').onclick = async () => {
     const r = records.find(x => x.id === modalTarget.id);
     const sch = r.schedule.find(s => s.ym === modalTarget.ym);
-    sch.isDone = true; sch.engName = document.getElementById('mEngName').value; sch.doneDate = document.getElementById('mDoneDate').value;
+    sch.isDone = true; 
+    sch.engName = document.getElementById('mEngName').value; 
+    sch.doneDate = document.getElementById('mDoneDate').value;
     await save(); closeModal();
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    quill = new Quill('#editor-container', { 
-      theme: 'snow', 
-      modules: { 
-        toolbar: [
-          [{ 'size': ['small', false, 'large', 'huge'] }],
-          ['bold', 'underline'], 
-          [{ 'color': [] }, { 'background': [] }], 
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }], 
-          ['clean'] 
-        ] 
-      } 
-    });
-    document.getElementById('monthPick').value = new Date().toISOString().slice(0, 7);
-    
-    // 預先檢查有沒有存過密碼，有的話直接讀取
-    if (sessionStorage.getItem('sys_pwd')) {
-      document.getElementById('authOverlay').style.display = 'none';
-      document.getElementById('authModal').style.display = 'none';
-      load();
-    }
-  });
+  document.getElementById('modeSeg').onclick = (e) => {
+    const b = e.target.closest('button'); if(!b) return;
+    if (b.dataset.mode === 'admin' && prompt("管理者密碼：") !== ADMIN_PASSWORD) return;
+    mode = b.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x===b));
+    document.getElementById('adminControls').style.display = mode === 'admin' ? 'flex' : 'none';
+    render();
+  };
 
+  document.addEventListener('DOMContentLoaded', () => {
+    quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } });
+    document.getElementById('monthPick').value = new Date().toISOString().slice(0, 7);
+    load();
+  });
   document.getElementById('q').oninput = render;
   document.getElementById('monthPick').onchange = render;
   document.getElementById('scope').onchange = render;
