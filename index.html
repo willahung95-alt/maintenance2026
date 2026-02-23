@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客戶維護管理系統</title>
+  <title>KH_客戶維護管理系統</title>
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -229,7 +229,7 @@
           <button class="mode-btn btn" data-mode="admin" type="button">管理模式</button>
         </div>
         <div id="adminControls" style="display:none; gap:10px;">
-          <button id="btnLog" class="btn btn-outline" type="button" onclick="openSystemLog('edit')"><span class="material-symbols-rounded">history_edu</span>發佈日誌</button>
+          <button id="btnPublishLog" class="btn btn-outline" type="button" onclick="openSystemLog('edit')"><span class="material-symbols-rounded">history_edu</span>發佈日誌</button>
           <button class="btn btn-primary" type="button" onclick="openEdit()"><span class="material-symbols-rounded">add</span>新增維護</button>
         </div>
       </div>
@@ -306,25 +306,28 @@
               <div>
                 <label style="font-size:0.85rem;">產品</label>
                 <select id="product" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
-                    <option value="ee-class">ee-class</option>
                     <option value="Adobe Connect">Adobe Connect</option>
-                    <option value="km+">km+</option>
-                    <option value="tms+">tms+</option>
+                    <option value="Creo/Windchill">Creo/Windchill</option>
+                    <option value="ee-class">ee-class</option>
+                    <option value="GoPatrol">GoPatrol</option>
+  　                <option value="HyperPDM">HyperPDM</option>
                     <option value="i-reporter">i-reporter</option>
-                    <option value="HyperPDM">HyperPDM</option>
+                    <option value="km+">km+</option>
+                    <option value="PDMC">PDMC</option>
+                    <option value="Solid Edge">Solid Edge</option>
+                    <option value="tms+">tms+</option>
                 </select>
               </div>
               <div>
                 <label style="font-size:0.85rem;">業務</label>
                 <select id="salesName" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
-                    <option value="Willa">Willa</option>
+                    <option value="Alex">Alex</option>
                     <option value="Melissa">Melissa</option>
                     <option value="Anita">Anita</option>
-                    <option value="Mandy">Mandy</option>
                     <option value="Annie">Annie</option>
                     <option value="Emerald">Emerald</option>
-                    <option value="Anyen">Anyen</option>
-                    <option value="Jenny">Jenny</option>
+                    <option value="Claire">Claire</option>
+                    <option value="Willa">Willa</option>                  
                 </select>
               </div>
             </div>
@@ -332,11 +335,13 @@
             <div style="margin-bottom:12px;">
                 <label style="font-size:0.85rem;">維護工程師</label>
                 <select id="engineer" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);">
-                    <option value="">請選擇</option>
+                    <option value="Johnson">Johnson</option>
                     <option value="Willa">Willa</option>
                     <option value="Charlie">Charlie</option>
+                    <option value="Jin">Jin</option>
                     <option value="Lindsay">Lindsay</option>
-                    <option value="Johnson">Johnson</option>
+                    <option value="Eason">Eason</option>
+                    <option value="Gary">Gary</option>
                     <option value="Isaac">Isaac</option>
                 </select>
             </div>
@@ -346,7 +351,7 @@
               <div><label style="font-size:0.85rem;">維護訖日</label><input type="date" id="endDate" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);" onchange="handleDateChange('end')"></div>
             </div>
             <div class="ym-manager">
-              <label style="font-size:0.85rem; font-weight:600;">維護月份管理（季維護：3/6/9/12；月維護：每月）</label>
+              <label style="font-size:0.85rem; font-weight:600;">維護月份管理</label>
               <div style="display:flex; gap:14px; margin-top:8px; align-items:center;">
                 <label style="display:flex; gap:6px; align-items:center; font-size:0.85rem; color:var(--text-soft);">
                   <input type="checkbox" id="cycleQuarter" checked onchange="onCycleToggle('quarter')">
@@ -373,7 +378,7 @@
       </div>
 
       <div id="adminAction" style="display:none;">
-        <button type="submit" class="btn btn-primary" style="width:100%; padding:12px;">儲存並同步至資料庫</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:12px; justify-content:center;">儲存</button>
         <button type="button" id="btnDelete" class="btn btn-outline" style="width:100%; margin-top:10px; color:var(--danger);">刪除紀錄</button>
       </div>
     </form>
@@ -382,40 +387,54 @@
   <div class="modal" id="doneModal">
     <h3 style="margin-top:0;">完工申報</h3>
     <div style="margin-bottom:10px;"><label>實際完工日</label><input type="date" id="mDoneDate" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></div>
-    <div style="margin-bottom:15px;"><label>維護工程師 (執行者)</label><select id="mEngName" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"><option value="Willa">Willa</option><option value="Charlie">Charlie</option><option value="Lindsay">Lindsay</option><option value="Johnson">Johnson</option><option value="Isaac">Isaac</option></select></div>
+    <div style="margin-bottom:15px;"><label>維護工程師 (執行者)</label>
+    <select id="mEngName" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">
+         <option value="Johnson">Johnson</option>
+         <option value="Willa">Willa</option>
+         <option value="Charlie">Charlie</option>
+         <option value="Jin">Jin</option>
+         <option value="Lindsay">Lindsay</option>
+         <option value="Eason">Eason</option>
+         <option value="Gary">Gary</option>
+         <option value="Isaac">Isaac</option>
+    </select></div>
     <div style="display:flex; gap:10px;"><button id="mSave" type="button" class="btn btn-primary" style="flex:1;">提交</button><button type="button" onclick="closeModal()" class="btn btn-outline" style="flex:1;">取消</button></div>
   </div>
 
 <script>
   // 請確認 API_URL 是最新的
-  const API_URL = "https://script.googleusercontent.com/macros/s/AKfycbyBqd9FAcch_710zNMnRv3ZSTN7Fcux-ufMfBjxNF-8hJRs3jBBNKW3y1Ycq8xScV4L/exec";
-  
-  const API_TOKEN = "otsukakh5501398"; // 與 GAS 的 API_TOKEN 相同
-
-  // ✅ 依 API_URL 是否已含 ? 自動拼接 query（避免用 & 導致 404 / 回 HTML）
-  function buildApiUrl(queryString) {
-    const sep = API_URL.includes('?') ? '&' : '?';
-    return API_URL + sep + queryString;
-  }
-const ADMIN_PASSWORD = "admin5501398";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzFpin-r3CwDUrTjqFuvGMky6sJwrIHmswX_KscuHGZoOIwZVY0kb5JGHuH0JiRzKay/exec?token=otsukakh5501398";
+  const ADMIN_PASSWORD_A = "poweradmin@5501398";   // A：最高管理者（可發佈日誌 + 新增維護）
+  const ADMIN_PASSWORD_B = "admin16088678";      // B：業務（只可新增維護）← 請改成你的 B 密碼
+  let adminRole = "user";                    // "user" | "sales" | "super"
   const VERSION_ID = "SYSTEM_LOG_v6"; 
 
-　let editorUser = null; // { role, account, display, user, upwd }
-  function buildAuthQuery_(){
-    if(!editorUser || !editorUser.role) return '';
-    if(editorUser.role === 'admin') return `&role=admin&upwd=${encodeURIComponent(editorUser.upwd||'')}`;
-    if(editorUser.role === 'sales') {
-      const u = editorUser.account || editorUser.user || '';
-      return `&role=sales&user=${encodeURIComponent(u)}&upwd=${encodeURIComponent(editorUser.upwd||'')}`;
-    }
-    return '';
-  }
   let records = [], mode = "user", editingId = null, quill, modalTarget = null, editingYMList = [];
   let endDateManual = false; // true: 使用者已手動調整維護訖日（避免起日變動時自動覆蓋）
   let systemLogs = []; 
   let editingLogVersion = null; 
 
   let pwdResolve = null;
+
+  // === 權限/身分：記錄目前操作人（用於刪除/編輯 ownership 判斷）===
+  function getActorName_() {
+    return (sessionStorage.getItem('actorName') || '').trim();
+  }
+  function setActorName_(name) {
+    sessionStorage.setItem('actorName', (name || '').trim());
+  }
+  function isSuper_() { return adminRole === 'super'; }
+  function isSalesAdmin_() { return adminRole === 'sales'; }
+  function canManageRecord_(r) {
+    if (!r) return false;
+    if (isSuper_()) return true;
+    if (isSalesAdmin_()) {
+      const actor = getActorName_();
+      return !!actor && String(r.salesName || '') === actor;
+    }
+    return false;
+  }
+
 
   // === UX helper: 判斷備註是否有內容、產生 hover 摘要 ===
   function hasMeaningfulNotes(html) {
@@ -487,60 +506,6 @@ const ADMIN_PASSWORD = "admin5501398";
     }
   }
 
-async function editorLogin(role) {
-  // role: "admin" or "sales"
-  const sysPwd = sessionStorage.getItem('sys_pwd'); // 你進站密碼原本就有
-  if (!sysPwd) { alert("請先輸入系統密碼"); return null; }
-
-  // 這裡用最小做法：用 prompt（你若已有 modal，我也能改成 modal 版）
-  if (role === "admin") {
-    const upwd = prompt("請輸入管理者密碼：");
-    if (!upwd) return null;
-
-    const resp = await fetch(buildApiUrl(`token=${encodeURIComponent(API_TOKEN)}&pwd=${encodeURIComponent(sysPwd)}&role=admin&upwd=${encodeURIComponent(upwd)}`), {
-      method: "POST",
-      body: JSON.stringify({ action: "login" })
-    });
-    const result = await resp.json();
-    if (result.result !== "success") { alert("管理者密碼錯誤"); return null; }
-
-    editorUser = { role: "admin", account: "admin", display: "Admin", upwd };
-    return editorUser;
-  }
-
-  // sales
-  const user = prompt("請輸入業務帳號（例如 willa）：");
-  if (!user) return null;
-  const upwd = prompt("請輸入業務密碼：");
-  if (!upwd) return null;
-
-  const resp = await fetch(buildApiUrl(`token=${encodeURIComponent(API_TOKEN)}&pwd=${encodeURIComponent(sysPwd)}&role=sales&user=${encodeURIComponent(user)}&upwd=${encodeURIComponent(upwd)}`), {
-    method: "POST",
-    body: JSON.stringify({ action: "login" })
-  });
-  const result = await resp.json();
-  if (result.result !== "success") { alert("業務帳密錯誤"); return null; }
-
-  editorUser = { role: "sales", account: result.user.account, display: result.user.display, user: result.user.account, upwd };
-  return editorUser;
-}
-
-async function enterEditMode() {
-  const role = confirm("按【確定】= 管理者登入\n按【取消】= 業務登入") ? "admin" : "sales";
-  const u = await editorLogin(role);
-  if (!u) return;
-
-  // 進入編輯模式
-  mode = "admin"; // 你原本用 admin 表示編輯模式
-  applyModeUI();
-  render();
-}
-
-// 只有 admin 看得到「發佈日誌」
-document.getElementById('btnLog').style.display =
-  (editorUser && editorUser.role === "admin") ? "inline-flex" : "none";
-
-
   document.getElementById('btnPwdConfirm').onclick = () => {
     const val = document.getElementById('inputPwd').value;
     document.getElementById('pwdModal').style.display = 'none';
@@ -556,7 +521,7 @@ document.getElementById('btnLog').style.display =
   function resetButtonState() {
       const btn = document.querySelector('#formEdit .btn-primary');
       if (btn) {
-          btn.innerText = "儲存並同步至資料庫";
+          btn.innerText = "儲存";
           btn.disabled = false;
       }
   }
@@ -567,7 +532,7 @@ document.getElementById('btnLog').style.display =
     if (!pwd) { location.reload(); return; }
     
     try {
-      const resp = await fetch(buildApiUrl(`token=${encodeURIComponent(API_TOKEN)}&pwd=${encodeURIComponent(pwd)}`));
+      const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`);
       const result = await resp.json();
       
       if (result.status === "error") { 
@@ -664,7 +629,7 @@ data-tooltip="${noteTooltip}"
           <td>
             <div style="display:flex; gap:6px; justify-content: flex-end;">
               ${sch ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="toggleDone('${r.id}','${ym}')"><span class="material-symbols-rounded" style="font-size:18px;">${(sch.isDone || sch.ym < currentYM)?'history':'done'}</span></button>` : ''}
-              ${mode === 'admin' ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="openEdit('${r.id}')"><span class="material-symbols-rounded" style="font-size:18px;">edit</span></button>` : ''}
+              ${mode === 'admin' && (isSuper_() || (isSalesAdmin_() && canManageRecord_(r))) ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="openEdit('${r.id}')"><span class="material-symbols-rounded" style="font-size:18px;">edit</span></button>` : ''}
             </div>
           </td>
         </tr>
@@ -710,12 +675,15 @@ data-tooltip="${noteTooltip}"
              };
           }
       } else {
-          payload = records; 
+          payload = { 
+            action: "saveRecords",
+            role: adminRole,
+            user: getActorName_() || (adminRole === "super" ? "Admin" : ""),
+            records: records
+          };
       }
 
-            const authQuery = buildAuthQuery_();
-
-      const resp = await fetch(buildApiUrl(`token=${encodeURIComponent(API_TOKEN)}&pwd=${encodeURIComponent(pwd)}${authQuery}`), { 
+      const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
         method: "POST", 
         body: JSON.stringify(payload),
         signal: controller.signal
@@ -775,21 +743,30 @@ data-tooltip="${noteTooltip}"
     return out;
   }
 
-  // 季維護：固定季度月份（3/6/9/12），取維護期間涵蓋到的季度月份（含起月/訖月所在月份）
-  function buildQuarterYMsByRange_(startDate, endDate) {
-    const sy = startDate.getFullYear(), sm = startDate.getMonth();
-    const ey = endDate.getFullYear(), em = endDate.getMonth();
-    const startIdx = sy*12 + sm;
-    const endIdx = ey*12 + em;
-    if (startIdx > endIdx) return [];
-    const out = [];
-    for (let idx = startIdx; idx <= endIdx; idx++) {
-      const y = Math.floor(idx/12);
-      const m0 = idx % 12; // 0~11
-      if (m0 === 2 || m0 === 5 || m0 === 8 || m0 === 11) out.push(ymFromYearMonth_(y, m0));
-    }
-    return out;
+ // 季維護：以「開始月份 +2」為第一個維護月，之後每 +3 個月一次，直到涵蓋訖月
+　function buildQuarterYMsByRange_(startDate, endDate) {
+　  const sy = startDate.getFullYear(), sm = startDate.getMonth();
+　  const ey = endDate.getFullYear(), em = endDate.getMonth();
+　  const startIdx = sy * 12 + sm;
+　  const endIdx = ey * 12 + em;
+　  if (startIdx > endIdx) return [];
+
+ 　 const out = [];
+
+  // 第一個季維護月：開始月份 +2
+　  let idx = startIdx + 2;
+
+  // 如果第一個季維護月已經超過維護訖月，則本期間不會有季維護月
+  while (idx <= endIdx) {
+    const y = Math.floor(idx / 12);
+    const m0 = idx % 12;
+    out.push(ymFromYearMonth_(y, m0));
+    idx += 3;
   }
+
+  return out;
+}
+
 
   // 互斥：checkbox 行為像 radio
   function setCycleUI_(type) {
@@ -798,6 +775,12 @@ data-tooltip="${noteTooltip}"
     if (!q || !m) return;
     if (type === 'month') { m.checked = true; q.checked = false; }
     else { q.checked = true; m.checked = false; }
+  }
+  
+    // 取得目前維護月份模式（季維護 / 月維護）
+  function getCycleLabel_() {
+    const isMonthly = document.getElementById('cycleMonth')?.checked;
+    return isMonthly ? "月維護" : "季維護";
   }
 
 
@@ -885,11 +868,14 @@ data-tooltip="${noteTooltip}"
     document.getElementById('adminAction').style.display = 'block';
     editingId = id;
     const r = records.find(x => x.id === id) || { customer:"", product:"ee-class", salesName:"Willa", engineer:"", startDate:"", endDate:"", notes:"", schedule: [] };
-    const isViewOnly = forceReadOnly || mode === 'user';
+    const actor = getActorName_();
+    const isOwnerForSales = (!id) ? true : (String(r.salesName || '') === actor);
+    const isViewOnly = forceReadOnly || mode === 'user' || (isSalesAdmin_() && !isOwnerForSales);
+
     
     document.getElementById('adminOnlyFields').style.display = isViewOnly ? 'none' : 'block';
     document.getElementById('adminAction').style.display = isViewOnly ? 'none' : 'block';
-    document.getElementById('btnDelete').style.display = (isViewOnly || !id) ? 'none' : 'block';
+    document.getElementById('btnDelete').style.display = (!id || isViewOnly || !canManageRecord_(r)) ? 'none' : 'block';
     document.getElementById('drawerTitle').textContent = isViewOnly ? "備註內容" : (id ? "編輯維護" : "新增維護");
     
     if(isViewOnly) {
@@ -905,13 +891,12 @@ data-tooltip="${noteTooltip}"
     document.getElementById('customer').value = r.customer || "";
     document.getElementById('product').value = r.product || "ee-class";
     document.getElementById('salesName').value = r.salesName || "Willa";
-    // ✅ B-3：業務登入後，新增/編輯時鎖定業務欄位為本人（後端也會再強制覆蓋）
-    const salesSel = document.getElementById('salesName');
-    if (editorUser && editorUser.role === 'sales') {
-      salesSel.value = editorUser.display;
-      salesSel.disabled = true;
+    // ✅ 業務管理者(B)僅能維護/刪除自己的資料：鎖定業務欄位為登入者
+    if (isSalesAdmin_()) {
+      if (actor) document.getElementById('salesName').value = actor;
+      document.getElementById('salesName').disabled = true;
     } else {
-      salesSel.disabled = false;
+      document.getElementById('salesName').disabled = false;
     }
     document.getElementById('engineer').value = r.engineer || "";
     document.getElementById('startDate').value = r.startDate || "";
@@ -932,6 +917,13 @@ data-tooltip="${noteTooltip}"
   function openSystemLog(action) {
     resetButtonState();
 
+    // ✅ 權限控管：B 密碼僅可檢視日誌（view），不可發佈/編輯/刪除
+    if (action !== 'view' && adminRole !== 'super') {
+      alert('權限不足：僅最高管理者可發佈日誌。');
+      return;
+    }
+
+
     editingId = VERSION_ID;
     document.getElementById('drawerTitle').textContent = "系統更新日誌";
     
@@ -947,7 +939,7 @@ data-tooltip="${noteTooltip}"
         } else {
             const cardsHtml = systemLogs.map(log => {
                 let actionBtns = '';
-                if (mode === 'admin') {
+                if (adminRole === 'super') {
                     actionBtns = `
                     <div class="log-actions">
                         <button type="button" class="btn btn-outline" style="padding:2px 8px; font-size:12px;" onclick="editLogEntry('${log.version}')">編輯</button>
@@ -1017,8 +1009,7 @@ data-tooltip="${noteTooltip}"
       const payload = { action: "deleteLog", data: { targetVersion: version } };
       
       try {
-                    const authQuery = buildAuthQuery_();
-          const resp = await fetch(buildApiUrl(`token=${encodeURIComponent(API_TOKEN)}&pwd=${encodeURIComponent(pwd)}${authQuery}`), { 
+          const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
             method: "POST", 
             body: JSON.stringify(payload)
           });
@@ -1047,14 +1038,74 @@ data-tooltip="${noteTooltip}"
         return;
     }
     
+    // ✅ 業務管理者(B)：只能編輯/刪除自己的資料（以 salesName 作為 ownership）
+    if (isSalesAdmin_()) {
+      const actor = getActorName_();
+      if (!actor) { alert("請先輸入您的業務姓名"); return; }
+      if (editingId) {
+        const target = records.find(x => x.id === editingId);
+        if (target && String(target.salesName || '') !== actor) {
+          alert("權限不足：僅能編輯自己的資料。");
+          return;
+        }
+      }
+    }
+
+      // ====== ✅ 新增/編輯維護：必填檢查 + 儲存前確認 ======
+    const customer = document.getElementById('customer').value.trim();
+    const product = document.getElementById('product').value.trim();
+    const salesName = isSalesAdmin_() ? getActorName_() : document.getElementById('salesName').value.trim();
+    const engineer = document.getElementById('engineer').value.trim();
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    const missing = [];
+    if (!customer) missing.push("客戶名稱");
+    if (!product) missing.push("產品");
+    if (!salesName) missing.push("業務");
+    if (!engineer) missing.push("維護工程師");
+    if (!startDate) missing.push("維護起日");
+    if (!endDate) missing.push("維護訖日");
+
+    if (missing.length > 0) {
+      alert("以下欄位尚未填寫：\n- " + missing.join("\n- "));
+      return;
+    }
+
+    // 起訖日合理性檢查
+    if (new Date(startDate) > new Date(endDate)) {
+      alert("維護起日不可晚於維護訖日，請重新確認日期。");
+      return;
+    }
+
+    // 確保季/月互斥至少要有一個（多一層保險）
+    const cycleQuarter = document.getElementById('cycleQuarter')?.checked;
+    const cycleMonth = document.getElementById('cycleMonth')?.checked;
+    if (!cycleQuarter && !cycleMonth) {
+      alert("請選擇「季維護」或「月維護」。");
+      return;
+    }
+
+    const cycleLabel = getCycleLabel_();
+    const confirmMsg =
+      "請確認以下資訊無誤，按「確定」後將儲存：\n\n" +
+      `客戶名稱：${customer}\n` +
+      `產品：${product}\n` +
+      `業務：${salesName}\n` +
+      `維護工程師：${engineer}\n` +
+      `維護起訖日：${startDate}~${endDate}\n` +
+      cycleLabel;
+if (!confirm(confirmMsg)) return;
+    // ====== ✅ 新增/編輯維護：必填檢查 + 儲存前確認（結束） ======
+    
     const rData = {
       id: editingId || 'ID-' + Date.now(),
-      customer: document.getElementById('customer').value,
-      product: document.getElementById('product').value,
-      salesName: document.getElementById('salesName').value,
-      engineer: document.getElementById('engineer').value,
-      startDate: document.getElementById('startDate').value,
-      endDate: document.getElementById('endDate').value,
+      customer,
+      product,
+      salesName,
+      engineer,
+      startDate,
+      endDate,
       notes: quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML,
       schedule: editingYMList.map(ym => {
         const old = (records.find(x => x.id === editingId)?.schedule || []).find(s => s.ym === ym);
@@ -1085,7 +1136,19 @@ data-tooltip="${noteTooltip}"
 
   function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; closeModal(); }
   function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
-  document.getElementById('btnDelete').onclick = async () => { if(confirm("確定刪除此客戶？")) { records = records.filter(x => x.id !== editingId); await save(); closeDrawer(); } };
+  document.getElementById('btnDelete').onclick = async () => {
+    const r = records.find(x => x.id === editingId);
+    if (!r) return;
+    if (!canManageRecord_(r)) {
+      alert("權限不足：僅可刪除自己建立的資料。");
+      return;
+    }
+    if (confirm("確定刪除此客戶？")) {
+      records = records.filter(x => x.id !== editingId);
+      await save();
+      closeDrawer();
+    }
+  };
 
   document.getElementById('mSave').onclick = async () => {
     const r = records.find(x => x.id === modalTarget.id);
@@ -1098,17 +1161,45 @@ data-tooltip="${noteTooltip}"
 
   document.getElementById('modeSeg').onclick = async (e) => {
     const b = e.target.closest('button'); if(!b) return;
+
     if (b.dataset.mode === 'admin') {
       const input = await requestPassword("管理者密碼");
-      if (input !== ADMIN_PASSWORD) { if(input !== null) alert("密碼錯誤"); return; }
-      // ✅ B-4：記住 admin 身分，讓後端可驗證（儲存/日誌操作都會帶入）
-      editorUser = { role: 'admin', account: 'admin', display: 'Admin', upwd: input };
+      if (input === null) return;
+
+      if (input === ADMIN_PASSWORD_A) {
+        adminRole = "super";
+        setActorName_("Admin");
+      } else if (input === ADMIN_PASSWORD_B) {
+        adminRole = "sales";
+        // 要能區分是哪位業務在操作（用於刪除/編輯權限）
+        const allowed = Array.from(document.querySelectorAll('#salesName option')).map(o => o.value);
+        const last = getActorName_();
+        const name = prompt("請輸入您的姓名（需與「業務」下拉一致，例如：" + allowed.join("、") + "）", last || "");
+        if (!name) { alert("未輸入姓名，已取消切換管理模式。"); return; }
+        const trimmed = name.trim();
+        if (!allowed.includes(trimmed)) { 
+          alert("姓名不在可選清單內，請輸入下拉選單中的名稱。");
+          return;
+        }
+        setActorName_(trimmed);
+      } else { alert("密碼錯誤"); return; }
+    } else {
+      adminRole = "user";
     }
+
     mode = b.dataset.mode;
     document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x===b));
-    document.getElementById('adminControls').style.display = mode === 'admin' ? 'flex' : 'none';
+
+    const isAdmin = (mode === 'admin');
+    document.getElementById('adminControls').style.display = isAdmin ? 'flex' : 'none';
+
+    // ✅ 管理模式下：A 可見「發佈日誌」、B 隱藏「發佈日誌」
+    const btnPublishLog = document.getElementById('btnPublishLog');
+    if (btnPublishLog) btnPublishLog.style.display = (isAdmin && adminRole === "super") ? 'inline-flex' : 'none';
+
     render();
   };
+
 
   document.addEventListener('DOMContentLoaded', () => {
     quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } });
