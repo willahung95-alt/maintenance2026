@@ -655,7 +655,7 @@ data-tooltip="${noteTooltip}"
     try {
       const pwd = sessionStorage.getItem('sys_pwd');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
       
       let payload;
       
@@ -692,6 +692,10 @@ data-tooltip="${noteTooltip}"
 
       if (!resp.ok) throw new Error("Network response was not ok");
       const result = await resp.json();
+      if (result.result === "busy") {
+        alert("目前系統忙碌（可能有人同時在存檔），請稍後再試一次。");
+        return;
+      }
       if (result.result === "error") throw new Error(result.message);
 
       // 儲存成功後重新讀取資料
@@ -705,8 +709,12 @@ data-tooltip="${noteTooltip}"
       }
       
     } catch (e) {
-      if(e.message !== "無版本號") {
-          alert("儲存程序已執行，但回應逾時或發生錯誤。\n請重新整理頁面確認資料是否正確更新。");
+      console.error("SAVE ERROR:", e);
+      if (e && e.name === "AbortError") {
+        alert("儲存逾時：系統回應較慢或有人同時在存檔，請稍後重試，或重新整理頁面確認資料是否已更新。");
+      } else if (e.message !== "無版本號") {
+        alert("儲存程序已執行，但回應逾時或發生錯誤。
+請重新整理頁面確認資料是否正確更新。");
       }
     } finally {
       // 不論成功失敗，都強制重置按鈕文字與狀態
