@@ -25,7 +25,6 @@
     
     #mainContent { display: none; }
 
-    /* 密碼輸入框樣式 */
     .password-container { position: relative; display: flex; align-items: center; margin-bottom: 20px; }
     .password-input { width: 100%; padding: 10px 40px 10px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; }
     .toggle-password { position: absolute; right: 10px; cursor: pointer; color: var(--text-muted); user-select: none; }
@@ -79,7 +78,6 @@
     .done-status-box .status-title { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 4px; }
     .done-status-box .status-meta { font-size: 11px; opacity: 0.85; font-weight: 500; white-space: nowrap; }
 
-    /* === 備註 icon：有內容才顯示 + hover tooltip === */
     .note-indicator {
       color: #94a3b8;
       cursor: pointer;
@@ -133,7 +131,6 @@
 
     #editor-container { height: 350px; font-size: 16px; }
 
-    /* === 備註 / 日誌內容檢視樣式（透明底 + 內距 + 框線） === */
     #note-viewer{
       line-height: 1.7;
       color: var(--text-main);
@@ -153,7 +150,6 @@
       color: var(--text-muted);
     }
 
-    /* === 日誌卡片樣式 === */
     .log-card {
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -310,7 +306,7 @@
                     <option value="Creo/Windchill">Creo/Windchill</option>
                     <option value="ee-class">ee-class</option>
                     <option value="GoPatrol">GoPatrol</option>
-  　                <option value="HyperPDM">HyperPDM</option>
+                    <option value="HyperPDM">HyperPDM</option>
                     <option value="i-reporter">i-reporter</option>
                     <option value="km+">km+</option>
                     <option value="PDMC">PDMC</option>
@@ -405,26 +401,34 @@
   // 請確認 API_URL 是最新的
   const API_URL = "https://script.google.com/macros/s/AKfycbzFpin-r3CwDUrTjqFuvGMky6sJwrIHmswX_KscuHGZoOIwZVY0kb5JGHuH0JiRzKay/exec?token=otsukakh5501398";
   const ADMIN_PASSWORD_A = "poweradmin@5501398";   // A：最高管理者（可發佈日誌 + 新增維護）
-  const ADMIN_PASSWORD_B = "admin16088678";      // B：業務（只可新增維護）← 請改成你的 B 密碼
+  const ADMIN_PASSWORD_B = "admin16088678";      // B：業務（只可新增維護）
   let adminRole = "user";                    // "user" | "sales" | "super"
   const VERSION_ID = "SYSTEM_LOG_v6"; 
 
   let records = [], mode = "user", editingId = null, quill, modalTarget = null, editingYMList = [];
-  let endDateManual = false; // true: 使用者已手動調整維護訖日（避免起日變動時自動覆蓋）
+  let endDateManual = false;
   let systemLogs = []; 
   let editingLogVersion = null; 
 
   let pwdResolve = null;
 
-  // === 權限/身分：記錄目前操作人（用於刪除/編輯 ownership 判斷）===
+  function ensureQuill_() {
+    if (quill) return true;
+    alert('編輯器資源載入失敗（Quill 未載入）。\n\n請確認網路可連到 https://cdn.quilljs.com/ ，並重新整理頁面。');
+    return false;
+  }
+
   function getActorName_() {
     return (sessionStorage.getItem('actorName') || '').trim();
   }
+  
   function setActorName_(name) {
     sessionStorage.setItem('actorName', (name || '').trim());
   }
+  
   function isSuper_() { return adminRole === 'super'; }
   function isSalesAdmin_() { return adminRole === 'sales'; }
+  
   function canManageRecord_(r) {
     if (!r) return false;
     if (isSuper_()) return true;
@@ -435,15 +439,11 @@
     return false;
   }
 
-
-  // === UX helper: 判斷備註是否有內容、產生 hover 摘要 ===
   function hasMeaningfulNotes(html) {
     if (!html) return false;
     const s = String(html).trim();
     if (!s) return false;
-    // 常見空內容
     if (s === '<p><br></p>' || s === '<p></p>' || s === '<br>') return false;
-    // 去掉 tag 後如果還有字才算
     const text = stripHtmlToText(s).trim();
     return text.length > 0;
   }
@@ -452,25 +452,10 @@
     const div = document.createElement('div');
     div.innerHTML = html;
     return (div.textContent || div.innerText || '')
-      .replace(/\u00A0/g, ' ')   // &nbsp;
+      .replace(/\u00A0/g, ' ')
       .replace(/[\r\n]+/g, '\n')
       .replace(/[\t ]+/g, ' ')
       .trim();
-  }
-
-  function truncateText(s, maxLen = 90) {
-    if (!s) return '';
-    const str = String(s);
-    return str.length > maxLen ? str.slice(0, maxLen - 1) + '…' : str;
-  }
-
-  function escapeAttr(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 
   function requestPassword(title = "請輸入系統密碼") {
@@ -517,7 +502,6 @@
       if (e.key === 'Enter') document.getElementById('btnPwdConfirm').click();
   });
 
-  // 關鍵修正：確保按鈕每次打開都是可用的
   function resetButtonState() {
       const btn = document.querySelector('#formEdit .btn-primary');
       if (btn) {
@@ -587,8 +571,6 @@
 
     filtered.forEach(r => {
       const sch = (r.schedule || []).find(s => s.ym === ym);
-
-      // ✅ 備註 UX：有內容才顯示 icon；hover 僅顯示提示文字（不顯示內容）
       const hasNotes = hasMeaningfulNotes(r.notes);
       const noteTooltip = hasNotes ? "點擊查看備註" : "";
 
@@ -599,11 +581,7 @@
         <tr>
           <td>
             <span style="font-weight:700;">${r.customer}</span>
-            ${hasNotes ? `
-              <span class="material-symbols-rounded note-indicator"
-data-tooltip="${noteTooltip}"
-                onclick="openEdit('${r.id}', true)">description</span>
-            ` : ''}
+            ${hasNotes ? `<span class="material-symbols-rounded note-indicator" data-tooltip="${noteTooltip}" onclick="openEdit('${r.id}', true)">description</span>` : ''}
           </td>
           <td>
             <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">${r.product}</div>
@@ -660,19 +638,14 @@ data-tooltip="${noteTooltip}"
       let payload;
       
       if (editingId === VERSION_ID) {
+          if (!ensureQuill_()) throw new Error('Quill not ready');
           const verInput = document.getElementById('logVersionInput').value;
           if(!verInput) { alert("請輸入版本號"); throw new Error("無版本號"); }
 
           if (editingLogVersion) {
-             payload = { 
-               action: "editLog", 
-               data: { targetVersion: editingLogVersion, newVersion: verInput, content: quill.root.innerHTML } 
-             };
+             payload = { action: "editLog", data: { targetVersion: editingLogVersion, newVersion: verInput, content: quill.root.innerHTML } };
           } else {
-             payload = { 
-               action: "addLog", 
-               data: { version: verInput, content: quill.root.innerHTML } 
-             };
+             payload = { action: "addLog", data: { version: verInput, content: quill.root.innerHTML } };
           }
       } else {
           payload = { 
@@ -698,26 +671,19 @@ data-tooltip="${noteTooltip}"
       }
       if (result.result === "error") throw new Error(result.message);
 
-      // 儲存成功後重新讀取資料
       await load(); 
-      
-      // 修正重點：判斷是否為日誌編輯，如果是，回到「日誌列表」而不是關閉抽屜
-      if(editingId === VERSION_ID) {
-        openSystemLog('view'); 
-      } else {
-        closeDrawer(); 
-      }
+      if(editingId === VERSION_ID) { openSystemLog('view'); } else { closeDrawer(); }
       
     } catch (e) {
       console.error("SAVE ERROR:", e);
       if (e && e.name === "AbortError") {
         alert("儲存逾時：系統回應較慢或有人同時在存檔，請稍後重試，或重新整理頁面確認資料是否已更新。");
-      } else if (e.message !== "無版本號") {
-        alert("儲存程序已執行，但回應逾時或發生錯誤。
-請重新整理頁面確認資料是否正確更新。");
+      } else if (e && e.message === "無版本號") {
+      } else {
+        const msg = (e && (e.message || e.toString())) ? (e.message || e.toString()) : "未知錯誤";
+        alert("儲存失敗：" + msg);
       }
     } finally {
-      // 不論成功失敗，都強制重置按鈕文字與狀態
       resetButtonState();
       if (activeBtn && activeBtn !== document.querySelector('#formEdit .btn-primary')) {
           activeBtn.innerText = originalText;
@@ -726,16 +692,10 @@ data-tooltip="${noteTooltip}"
     }
   }
 
-  // === 維護月份：季維護 / 月維護（依維護期間） ===
   function pad2_(n){ return String(n).padStart(2,'0'); }
-
-  // 安全的本地年月字串（避免 toISOString 造成月份偏移）
   function ymFromYearMonth_(y, m0){ return `${y}-${pad2_(m0+1)}`; }
-
-  // 安全的本地日期字串（YYYY-MM-DD）
   function dateToYMD_(d){ return `${d.getFullYear()}-${pad2_(d.getMonth()+1)}-${pad2_(d.getDate())}`; }
 
-  // 回傳：維護期間涵蓋到的每個月（含起月、含訖月）
   function buildMonthlyYMsByRange_(startDate, endDate) {
     const sy = startDate.getFullYear(), sm = startDate.getMonth();
     const ey = endDate.getFullYear(), em = endDate.getMonth();
@@ -751,32 +711,25 @@ data-tooltip="${noteTooltip}"
     return out;
   }
 
- // 季維護：以「開始月份 +2」為第一個維護月，之後每 +3 個月一次，直到涵蓋訖月
-　function buildQuarterYMsByRange_(startDate, endDate) {
-　  const sy = startDate.getFullYear(), sm = startDate.getMonth();
-　  const ey = endDate.getFullYear(), em = endDate.getMonth();
-　  const startIdx = sy * 12 + sm;
-　  const endIdx = ey * 12 + em;
-　  if (startIdx > endIdx) return [];
+  function buildQuarterYMsByRange_(startDate, endDate) {
+    const sy = startDate.getFullYear(), sm = startDate.getMonth();
+    const ey = endDate.getFullYear(), em = endDate.getMonth();
+    const startIdx = sy * 12 + sm;
+    const endIdx = ey * 12 + em;
+    if (startIdx > endIdx) return [];
 
- 　 const out = [];
+    const out = [];
+    let idx = startIdx + 2;
 
-  // 第一個季維護月：開始月份 +2
-　  let idx = startIdx + 2;
-
-  // 如果第一個季維護月已經超過維護訖月，則本期間不會有季維護月
-  while (idx <= endIdx) {
-    const y = Math.floor(idx / 12);
-    const m0 = idx % 12;
-    out.push(ymFromYearMonth_(y, m0));
-    idx += 3;
+    while (idx <= endIdx) {
+      const y = Math.floor(idx / 12);
+      const m0 = idx % 12;
+      out.push(ymFromYearMonth_(y, m0));
+      idx += 3;
+    }
+    return out;
   }
 
-  return out;
-}
-
-
-  // 互斥：checkbox 行為像 radio
   function setCycleUI_(type) {
     const q = document.getElementById('cycleQuarter');
     const m = document.getElementById('cycleMonth');
@@ -785,14 +738,11 @@ data-tooltip="${noteTooltip}"
     else { q.checked = true; m.checked = false; }
   }
   
-    // 取得目前維護月份模式（季維護 / 月維護）
   function getCycleLabel_() {
     const isMonthly = document.getElementById('cycleMonth')?.checked;
     return isMonthly ? "月維護" : "季維護";
   }
 
-
-  // 判斷既有月份清單是否為「每月連續」
   function isConsecutiveMonthly_(ymList) {
     if (!ymList || ymList.length < 2) return false;
     const dates = ymList.map(ym => new Date(ym + "-01")).sort((a,b) => a - b);
@@ -810,18 +760,16 @@ data-tooltip="${noteTooltip}"
     return isMonthly ? buildMonthlyYMsByRange_(startDate, endDate) : buildQuarterYMsByRange_(startDate, endDate);
   }
 
-  // source: 'start' | 'end' | undefined
   function handleDateChange(source) {
     const startVal = document.getElementById('startDate').value;
     if(!startVal) return;
 
-    // 起日變更：若訖日未手動調整，維持原本「預設 1 年期」自動帶入
     if (source === 'start') endDateManual = false;
     if (source === 'end') endDateManual = true;
 
     const startDate = new Date(startVal);
-
     let endVal = document.getElementById('endDate').value;
+    
     if (!endVal || !endDateManual) {
       const endDateAuto = new Date(startVal);
       endDateAuto.setFullYear(startDate.getFullYear() + 1);
@@ -859,7 +807,9 @@ data-tooltip="${noteTooltip}"
     const val = document.getElementById('manualYM').value;
     if(val && !editingYMList.includes(val)) { editingYMList.push(val); editingYMList.sort(); renderYMList(); }
   }
+  
   function removeYM(ym) { editingYMList = editingYMList.filter(x => x !== ym); renderYMList(); }
+  
   function renderYMList() {
     document.getElementById('ymList').innerHTML = editingYMList.map(ym => `
       <div class="ym-tag">${ym} <span onclick="removeYM('${ym}')" style="cursor:pointer; color:var(--danger); font-weight:bold;">×</span></div>
@@ -879,7 +829,6 @@ data-tooltip="${noteTooltip}"
     const actor = getActorName_();
     const isOwnerForSales = (!id) ? true : (String(r.salesName || '') === actor);
     const isViewOnly = forceReadOnly || mode === 'user' || (isSalesAdmin_() && !isOwnerForSales);
-
     
     document.getElementById('adminOnlyFields').style.display = isViewOnly ? 'none' : 'block';
     document.getElementById('adminAction').style.display = isViewOnly ? 'none' : 'block';
@@ -891,6 +840,7 @@ data-tooltip="${noteTooltip}"
       document.getElementById('note-viewer').style.display = 'block';
       document.getElementById('note-viewer').innerHTML = r.notes || "尚無備註";
     } else {
+      if (!ensureQuill_()) return;
       document.getElementById('editor-wrapper').style.display = 'block';
       document.getElementById('note-viewer').style.display = 'none';
       quill.root.innerHTML = r.notes || "";
@@ -899,21 +849,21 @@ data-tooltip="${noteTooltip}"
     document.getElementById('customer').value = r.customer || "";
     document.getElementById('product').value = r.product || "ee-class";
     document.getElementById('salesName').value = r.salesName || "Willa";
-    // ✅ 業務管理者(B)僅能維護/刪除自己的資料：鎖定業務欄位為登入者
+    
     if (isSalesAdmin_()) {
       if (actor) document.getElementById('salesName').value = actor;
       document.getElementById('salesName').disabled = true;
     } else {
       document.getElementById('salesName').disabled = false;
     }
+    
     document.getElementById('engineer').value = r.engineer || "";
     document.getElementById('startDate').value = r.startDate || "";
     document.getElementById('endDate').value = r.endDate || "";
-    endDateManual = !!r.endDate; // 編輯既有資料時，視為已手動設定訖日（避免起日變更覆蓋）
+    endDateManual = !!r.endDate; 
 
     editingYMList = (r.schedule || []).map(s => s.ym);
 
-    // 依既有月份清單自動判斷季/月維護（沒有清單時預設季維護）
     if (editingYMList.length > 0 && isConsecutiveMonthly_(editingYMList)) setCycleUI_('month');
     else setCycleUI_('quarter');
 
@@ -925,17 +875,14 @@ data-tooltip="${noteTooltip}"
   function openSystemLog(action) {
     resetButtonState();
 
-    // ✅ 權限控管：B 密碼僅可檢視日誌（view），不可發佈/編輯/刪除
     if (action !== 'view' && adminRole !== 'super') {
       alert('權限不足：僅最高管理者可發佈日誌。');
       return;
     }
 
-
     editingId = VERSION_ID;
     document.getElementById('drawerTitle').textContent = "系統更新日誌";
     
-    // === 檢視模式 ===
     if (action === 'view') {
         document.getElementById('adminOnlyFields').style.display = 'none';
         document.getElementById('adminAction').style.display = 'none';
@@ -968,19 +915,18 @@ data-tooltip="${noteTooltip}"
         }
 
     } else {
-        // === 新增模式 ===
         editingLogVersion = null;
         document.getElementById('adminOnlyFields').style.display = 'block';
         document.getElementById('customerFields').style.display = 'none';
         document.getElementById('logVersionField').style.display = 'block';
         document.getElementById('btnDelete').style.display = 'none';
-        
         document.getElementById('adminAction').style.display = 'block';
         document.getElementById('editor-wrapper').style.display = 'block';
         document.getElementById('note-viewer').style.display = 'none';
         
         const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
         document.getElementById('logVersionInput').value = "v" + today;
+        if (!ensureQuill_()) return;
         quill.root.innerHTML = ""; 
         document.getElementById('noteLabel').textContent = "本次更新內容";
     }
@@ -1000,12 +946,12 @@ data-tooltip="${noteTooltip}"
       document.getElementById('customerFields').style.display = 'none';
       document.getElementById('logVersionField').style.display = 'block';
       document.getElementById('btnDelete').style.display = 'none';
-      
       document.getElementById('adminAction').style.display = 'block';
       document.getElementById('editor-wrapper').style.display = 'block';
       document.getElementById('note-viewer').style.display = 'none';
       
       document.getElementById('logVersionInput').value = log.version;
+      if (!ensureQuill_()) return;
       quill.root.innerHTML = log.content;
       document.getElementById('noteLabel').textContent = "編輯更新內容";
   }
@@ -1037,7 +983,6 @@ data-tooltip="${noteTooltip}"
   document.getElementById('formEdit').onsubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ 防呆：避免任何非儲存按鈕造成 submit
     const submitter = e.submitter;
     if (submitter && submitter.type !== 'submit') return;
 
@@ -1046,7 +991,6 @@ data-tooltip="${noteTooltip}"
         return;
     }
     
-    // ✅ 業務管理者(B)：只能編輯/刪除自己的資料（以 salesName 作為 ownership）
     if (isSalesAdmin_()) {
       const actor = getActorName_();
       if (!actor) { alert("請先輸入您的業務姓名"); return; }
@@ -1059,7 +1003,6 @@ data-tooltip="${noteTooltip}"
       }
     }
 
-      // ====== ✅ 新增/編輯維護：必填檢查 + 儲存前確認 ======
     const customer = document.getElementById('customer').value.trim();
     const product = document.getElementById('product').value.trim();
     const salesName = isSalesAdmin_() ? getActorName_() : document.getElementById('salesName').value.trim();
@@ -1080,13 +1023,11 @@ data-tooltip="${noteTooltip}"
       return;
     }
 
-    // 起訖日合理性檢查
     if (new Date(startDate) > new Date(endDate)) {
       alert("維護起日不可晚於維護訖日，請重新確認日期。");
       return;
     }
 
-    // 確保季/月互斥至少要有一個（多一層保險）
     const cycleQuarter = document.getElementById('cycleQuarter')?.checked;
     const cycleMonth = document.getElementById('cycleMonth')?.checked;
     if (!cycleQuarter && !cycleMonth) {
@@ -1103,9 +1044,10 @@ data-tooltip="${noteTooltip}"
       `維護工程師：${engineer}\n` +
       `維護起訖日：${startDate}~${endDate}\n` +
       cycleLabel;
-if (!confirm(confirmMsg)) return;
-    // ====== ✅ 新增/編輯維護：必填檢查 + 儲存前確認（結束） ======
+      
+    if (!confirm(confirmMsg)) return;
     
+    if (!ensureQuill_()) return;
     const rData = {
       id: editingId || 'ID-' + Date.now(),
       customer,
@@ -1123,6 +1065,7 @@ if (!confirm(confirmMsg)) return;
         return { ym, isDone: isPast, doneDate: isPast ? currentYM : "", engName: isPast ? "Auto" : "" };
       })
     };
+    
     const idx = records.findIndex(x => x.id === rData.id);
     if (idx !== -1) records[idx] = rData; else records.push(rData);
     await save(); 
@@ -1179,7 +1122,6 @@ if (!confirm(confirmMsg)) return;
         setActorName_("Admin");
       } else if (input === ADMIN_PASSWORD_B) {
         adminRole = "sales";
-        // 要能區分是哪位業務在操作（用於刪除/編輯權限）
         const allowed = Array.from(document.querySelectorAll('#salesName option')).map(o => o.value);
         const last = getActorName_();
         const name = prompt("請輸入您的姓名（需與「業務」下拉一致，例如：" + allowed.join("、") + "）", last || "");
@@ -1201,7 +1143,6 @@ if (!confirm(confirmMsg)) return;
     const isAdmin = (mode === 'admin');
     document.getElementById('adminControls').style.display = isAdmin ? 'flex' : 'none';
 
-    // ✅ 管理模式下：A 可見「發佈日誌」、B 隱藏「發佈日誌」
     const btnPublishLog = document.getElementById('btnPublishLog');
     if (btnPublishLog) btnPublishLog.style.display = (isAdmin && adminRole === "super") ? 'inline-flex' : 'none';
 
@@ -1210,8 +1151,23 @@ if (!confirm(confirmMsg)) return;
 
 
   document.addEventListener('DOMContentLoaded', () => {
-    quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } });
     document.getElementById('monthPick').value = new Date().toISOString().slice(0, 7);
+
+    try {
+      if (typeof Quill !== 'undefined') {
+        quill = new Quill('#editor-container', {
+          theme: 'snow',
+          modules: {
+            toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']]
+          }
+        });
+      } else {
+        console.error('Quill is not loaded.');
+      }
+    } catch (e) {
+      console.error('Quill init failed:', e);
+    }
+
     load();
   });
   document.getElementById('q').oninput = render;
@@ -1220,4 +1176,3 @@ if (!confirm(confirmMsg)) return;
 </script>
 </body>
 </html>
-
