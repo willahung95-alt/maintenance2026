@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TEST_客戶維護管理系統</title>
+  <title>KH_客戶維護管理系統</title>
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -25,6 +25,7 @@
     
     #mainContent { display: none; }
 
+    /* 密碼輸入框樣式 */
     .password-container { position: relative; display: flex; align-items: center; margin-bottom: 20px; }
     .password-input { width: 100%; padding: 10px 40px 10px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; }
     .toggle-password { position: absolute; right: 10px; cursor: pointer; color: var(--text-muted); user-select: none; }
@@ -78,6 +79,7 @@
     .done-status-box .status-title { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 4px; }
     .done-status-box .status-meta { font-size: 11px; opacity: 0.85; font-weight: 500; white-space: nowrap; }
 
+    /* === 備註 icon：有內容才顯示 + hover tooltip === */
     .note-indicator {
       color: #94a3b8;
       cursor: pointer;
@@ -131,6 +133,7 @@
 
     #editor-container { height: 350px; font-size: 16px; }
 
+    /* === 備註 / 日誌內容檢視樣式（透明底 + 內距 + 框線） === */
     #note-viewer{
       line-height: 1.7;
       color: var(--text-main);
@@ -150,6 +153,7 @@
       color: var(--text-muted);
     }
 
+    /* === 日誌卡片樣式 === */
     .log-card {
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -216,7 +220,7 @@
     <header>
       <div class="logo">
         <span class="material-symbols-rounded">analytics</span> 
-        TEST_客戶維護管理系統
+        客戶維護管理系統
         <span id="versionTag" onclick="openSystemLog('view')" title="點擊查看更新日誌">v6.0</span>
       </div>
       <div style="display:flex; gap:10px;">
@@ -306,7 +310,7 @@
                     <option value="Creo/Windchill">Creo/Windchill</option>
                     <option value="ee-class">ee-class</option>
                     <option value="GoPatrol">GoPatrol</option>
-                    <option value="HyperPDM">HyperPDM</option>
+  　                <option value="HyperPDM">HyperPDM</option>
                     <option value="i-reporter">i-reporter</option>
                     <option value="km+">km+</option>
                     <option value="PDMC">PDMC</option>
@@ -399,33 +403,26 @@
 
 <script>
   // 請確認 API_URL 是最新的
-  const API_URL = "https://script.google.com/macros/s/AKfycbzFpin-r3CwDUrTjqFuvGMky6sJwrIHmswX_KscuHGZoOIwZVY0kb5JGHuH0JiRzKay/exec?token=otsukakh5501398";
-  const ADMIN_PASSWORD_A = "poweradmin@5501398";   // A：最高管理者（可發佈日誌 + 新增維護）
-  const ADMIN_PASSWORD_B = "admin16088678";      // B：業務（只可新增維護）
-  let adminRole = "user";                    // "user" | "sales" | "super"
+  const API_URL = "https://script.google.com/macros/s/AKfycbyBqd9FAcch_710zNMnRv3ZSTN7Fcux-ufMfBjxNF-8hJRs3jBBNKW3y1Ycq8xScV4L/exec?token=otsukakh5501398";
+  const ADMIN_PASSWORD_A = "poweradmin@5501398";   // A：最高管理者
+  const ADMIN_PASSWORD_B = "admin16088678";        // B：業務
+  let adminRole = "user";                    
   const VERSION_ID = "SYSTEM_LOG_v6"; 
 
   let records = [], mode = "user", editingId = null, quill, modalTarget = null, editingYMList = [];
-  let endDateManual = false;
+  let endDateManual = false; 
   let systemLogs = []; 
   let editingLogVersion = null; 
-
   let pwdResolve = null;
 
   function ensureQuill_() {
     if (quill) return true;
-    alert('編輯器資源載入失敗（Quill 未載入）。\n\n請確認網路可連到 https://cdn.quilljs.com/ ，並重新整理頁面。');
+    alert('編輯器資源載入失敗（Quill 未載入）。\n請確認網路連線並重新整理頁面。');
     return false;
   }
 
-  function getActorName_() {
-    return (sessionStorage.getItem('actorName') || '').trim();
-  }
-  
-  function setActorName_(name) {
-    sessionStorage.setItem('actorName', (name || '').trim());
-  }
-  
+  function getActorName_() { return (sessionStorage.getItem('actorName') || '').trim(); }
+  function setActorName_(name) { sessionStorage.setItem('actorName', (name || '').trim()); }
   function isSuper_() { return adminRole === 'super'; }
   function isSalesAdmin_() { return adminRole === 'sales'; }
   
@@ -442,20 +439,14 @@
   function hasMeaningfulNotes(html) {
     if (!html) return false;
     const s = String(html).trim();
-    if (!s) return false;
-    if (s === '<p><br></p>' || s === '<p></p>' || s === '<br>') return false;
-    const text = stripHtmlToText(s).trim();
-    return text.length > 0;
+    if (!s || s === '<p><br></p>' || s === '<p></p>' || s === '<br>') return false;
+    return stripHtmlToText(s).trim().length > 0;
   }
 
   function stripHtmlToText(html) {
     const div = document.createElement('div');
     div.innerHTML = html;
-    return (div.textContent || div.innerText || '')
-      .replace(/\u00A0/g, ' ')
-      .replace(/[\r\n]+/g, '\n')
-      .replace(/[\t ]+/g, ' ')
-      .trim();
+    return (div.textContent || div.innerText || '').replace(/\u00A0/g, ' ').replace(/[\r\n]+/g, '\n').trim();
   }
 
   function requestPassword(title = "請輸入系統密碼") {
@@ -463,9 +454,7 @@
       document.getElementById('pwdTitle').textContent = title;
       document.getElementById('inputPwd').value = "";
       document.getElementById('inputPwd').type = "password"; 
-      const btnCancel = document.getElementById('btnPwdCancel');
-      if (title.includes("管理")) { btnCancel.style.display = 'flex'; } else { btnCancel.style.display = 'none'; }
-      
+      document.getElementById('btnPwdCancel').style.display = title.includes("管理") ? 'flex' : 'none';
       document.getElementById('pwdModal').style.display = 'block';
       document.getElementById('pwdOverlay').style.display = 'block';
       document.getElementById('inputPwd').focus();
@@ -482,13 +471,8 @@
   function togglePwd() {
     const input = document.getElementById('inputPwd');
     const icon = document.querySelector('.toggle-password');
-    if (input.type === "password") {
-      input.type = "text";
-      icon.textContent = "visibility_off";
-    } else {
-      input.type = "password";
-      icon.textContent = "visibility";
-    }
+    if (input.type === "password") { input.type = "text"; icon.textContent = "visibility_off"; }
+    else { input.type = "password"; icon.textContent = "visibility"; }
   }
 
   document.getElementById('btnPwdConfirm').onclick = () => {
@@ -502,13 +486,47 @@
       if (e.key === 'Enter') document.getElementById('btnPwdConfirm').click();
   });
 
-  function resetButtonState() {
-      const btn = document.querySelector('#formEdit .btn-primary');
-      if (btn) {
-          btn.innerText = "儲存";
-          btn.disabled = false;
-      }
+  // ========== 核心改寫：全新統一的 API 發送管理 (單筆處理，不再使用危險的 saveRecords) ==========
+  async function sendPayload(payload, successCallback, btnElement) {
+    const pwd = sessionStorage.getItem('sys_pwd');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒逾時控制
+    
+    let originalText = "";
+    if (btnElement) {
+        originalText = btnElement.innerText;
+        btnElement.innerText = "處理中...";
+        btnElement.disabled = true;
+    }
+    
+    try {
+        const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!resp.ok) throw new Error("網路回應異常");
+        const result = await resp.json();
+        
+        if (result.result === "busy") throw new Error("系統忙碌中，請稍後再試。");
+        if (result.result === "error") throw new Error(result.message);
+        
+        await load(); // 同步成功後重抓列表
+        if (successCallback) successCallback();
+        
+    } catch (e) {
+        if (e.name === "AbortError") alert("連線逾時，請檢查網路狀態或重整頁面確認。");
+        else alert("處理發生錯誤：" + (e.message || e.toString()));
+    } finally {
+        if (btnElement) {
+            btnElement.innerText = originalText;
+            btnElement.disabled = false;
+        }
+    }
   }
+  // =========================================================================================
 
   async function load() {
     let pwd = sessionStorage.getItem('sys_pwd');
@@ -527,7 +545,6 @@
       }
       
       sessionStorage.setItem('sys_pwd', pwd);
-
       if (result.records) {
          records = result.records;
          systemLogs = result.logs || [];
@@ -535,16 +552,10 @@
          records = result.filter(r => r.id !== VERSION_ID); 
       }
       
-      if(systemLogs.length > 0) {
-          document.getElementById('versionTag').textContent = systemLogs[0].version;
-      }
-
+      if(systemLogs.length > 0) document.getElementById('versionTag').textContent = systemLogs[0].version;
       document.getElementById('mainContent').style.display = 'block'; 
       render();
-    } catch (e) { 
-        alert("連線失敗，請檢查網路。"); 
-        console.error(e);
-    }
+    } catch (e) { alert("連線失敗，請檢查網路。"); console.error(e); }
   }
 
   function render() {
@@ -560,8 +571,8 @@
     }).sort((a,b) => a.customer.localeCompare(b.customer, 'zh-Hant'));
 
     document.getElementById('statTotal').textContent = records.length;
-    const doneCount = records.filter(r => r.schedule?.some(s => s.ym === ym && (s.isDone || s.ym < currentYM))).length;
-    const todoCount = records.filter(r => r.schedule?.some(s => s.ym === ym && (!s.isDone && s.ym >= currentYM))).length;
+    const doneCount = records.filter(r => r.schedule?.some(s => s.ym === ym && s.isDone)).length;
+    const todoCount = records.filter(r => r.schedule?.some(s => s.ym === ym && !s.isDone)).length;
     document.getElementById('statDone').textContent = doneCount;
     document.getElementById('statTodo').textContent = todoCount;
     document.getElementById('statRate').textContent = (doneCount + todoCount) > 0 ? Math.round((doneCount / (doneCount + todoCount)) * 100) + "%" : "0%";
@@ -573,7 +584,6 @@
       const sch = (r.schedule || []).find(s => s.ym === ym);
       const hasNotes = hasMeaningfulNotes(r.notes);
       const noteTooltip = hasNotes ? "點擊查看備註" : "";
-
       const salesTag = r.salesName ? `<span class="sales-tag" title="業務">${r.salesName}</span>` : '';
       const engTag = r.engineer ? `<span class="engineer-tag" title="維護工程師">${r.engineer}</span>` : '';
 
@@ -581,7 +591,7 @@
         <tr>
           <td>
             <span style="font-weight:700;">${r.customer}</span>
-            ${hasNotes ? `<span class="material-symbols-rounded note-indicator" data-tooltip="${noteTooltip}" onclick="openEdit('${r.id}', true)">description</span>` : ''}
+           ${hasNotes ? `<span class="material-symbols-rounded note-indicator" data-tooltip="${noteTooltip}" onclick="openEdit('${r.id}', true)">description</span>` : ''}
           </td>
           <td>
             <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">${r.product}</div>
@@ -592,104 +602,37 @@
             <div class="month-group">
               ${(r.schedule || []).map(s => {
                 const isPast = s.ym < currentYM;
-                return `<span class="month-chip ${(s.isDone || isPast) ? 'is-done' : ''} ${s.ym === ym ? 'active' : ''}">${parseInt(s.ym.slice(5))}月</span>`;
+                return `<span class="month-chip ${s.isDone ? 'is-done' : ''} ${s.ym === ym ? 'active' : ''}">${parseInt(s.ym.slice(5))}月</span>`;
               }).join('')}
             </div>
           </td>
-          <td>
-            ${sch ? ((sch.isDone || sch.ym < currentYM) ? `
-              <div class="done-status-box">
-                <div class="status-title"><span class="material-symbols-rounded" style="font-size:18px;">check_circle</span>完工</div>
-                <div class="status-meta">${sch.doneDate || '系統'}<br>${sch.engName || 'Auto'}</div>
-              </div>
-            ` : `<span style="color:var(--warning); font-weight:700; display:flex; align-items:center; gap:4px;"><span class="material-symbols-rounded" style="font-size:16px;">pending</span>待維護</span>`) : '--'}
-          </td>
+<td>
+  ${sch ? (
+    sch.isDone ? `
+      <div class="done-status-box">
+        <div class="status-title"><span class="material-symbols-rounded" style="font-size:18px;">check_circle</span>完工</div>
+        <div class="status-meta">${sch.doneDate || '系統'}<br>${sch.engName || '-'}</div>
+      </div>
+    ` : (sch.ym < currentYM ? `
+      <span style="color:var(--danger); font-weight:800; display:flex; align-items:center; gap:4px;">
+        <span class="material-symbols-rounded" style="font-size:16px;">error</span>逾期待維護
+      </span>
+    ` : `
+      <span style="color:var(--warning); font-weight:700; display:flex; align-items:center; gap:4px;">
+        <span class="material-symbols-rounded" style="font-size:16px;">pending</span>待維護
+      </span>
+    `)
+  ) : '--'}
+</td>
           <td>
             <div style="display:flex; gap:6px; justify-content: flex-end;">
-              ${sch ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="toggleDone('${r.id}','${ym}')"><span class="material-symbols-rounded" style="font-size:18px;">${(sch.isDone || sch.ym < currentYM)?'history':'done'}</span></button>` : ''}
+             ${sch ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="toggleDone('${r.id}','${ym}')"><span class="material-symbols-rounded" style="font-size:18px;">${sch.isDone ? 'history' : 'done'}</span></button>` : ''}
               ${mode === 'admin' && (isSuper_() || (isSalesAdmin_() && canManageRecord_(r))) ? `<button class="btn btn-outline" type="button" style="padding:4px" onclick="openEdit('${r.id}')"><span class="material-symbols-rounded" style="font-size:18px;">edit</span></button>` : ''}
             </div>
           </td>
         </tr>
       `);
     });
-  }
-
-  async function save() {
-    const btn = document.querySelector('#formEdit .btn-primary');
-    const mSaveBtn = document.getElementById('mSave');
-    let activeBtn = null;
-    let originalText = "";
-
-    if (document.getElementById('drawer').classList.contains('open') && btn) activeBtn = btn;
-    else if (document.getElementById('doneModal').style.display === 'block' && mSaveBtn) activeBtn = mSaveBtn;
-
-    if (activeBtn) {
-        originalText = activeBtn.innerText;
-        activeBtn.innerText = "儲存中...";
-        activeBtn.disabled = true;
-    }
-
-    try {
-      const pwd = sessionStorage.getItem('sys_pwd');
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000);
-      
-      let payload;
-      
-      if (editingId === VERSION_ID) {
-          if (!ensureQuill_()) throw new Error('Quill not ready');
-          const verInput = document.getElementById('logVersionInput').value;
-          if(!verInput) { alert("請輸入版本號"); throw new Error("無版本號"); }
-
-          if (editingLogVersion) {
-             payload = { action: "editLog", data: { targetVersion: editingLogVersion, newVersion: verInput, content: quill.root.innerHTML } };
-          } else {
-             payload = { action: "addLog", data: { version: verInput, content: quill.root.innerHTML } };
-          }
-      } else {
-          payload = { 
-            action: "saveRecords",
-            role: adminRole,
-            user: getActorName_() || (adminRole === "super" ? "Admin" : ""),
-            records: records
-          };
-      }
-
-      const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
-        method: "POST", 
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (!resp.ok) throw new Error("Network response was not ok");
-      const result = await resp.json();
-      if (result.result === "busy") {
-        alert("目前系統忙碌（可能有人同時在存檔），請稍後再試一次。");
-        return;
-      }
-      if (result.result === "error") throw new Error(result.message);
-
-      await load(); 
-      if(editingId === VERSION_ID) { openSystemLog('view'); } else { closeDrawer(); }
-      
-    } catch (e) {
-      console.error("SAVE ERROR:", e);
-      if (e && e.name === "AbortError") {
-        alert("儲存逾時：系統回應較慢或有人同時在存檔，請稍後重試，或重新整理頁面確認資料是否已更新。");
-      } else if (e && e.message === "無版本號") {
-      } else {
-        const msg = (e && (e.message || e.toString())) ? (e.message || e.toString()) : "未知錯誤";
-        alert("儲存失敗：" + msg);
-      }
-    } finally {
-      resetButtonState();
-      if (activeBtn && activeBtn !== document.querySelector('#formEdit .btn-primary')) {
-          activeBtn.innerText = originalText;
-          activeBtn.disabled = false;
-      }
-    }
   }
 
   function pad2_(n){ return String(n).padStart(2,'0'); }
@@ -699,56 +642,41 @@
   function buildMonthlyYMsByRange_(startDate, endDate) {
     const sy = startDate.getFullYear(), sm = startDate.getMonth();
     const ey = endDate.getFullYear(), em = endDate.getMonth();
-    const startIdx = sy*12 + sm;
-    const endIdx = ey*12 + em;
+    const startIdx = sy*12 + sm, endIdx = ey*12 + em;
     if (startIdx > endIdx) return [];
     const out = [];
-    for (let idx = startIdx; idx <= endIdx; idx++) {
-      const y = Math.floor(idx/12);
-      const m0 = idx % 12;
-      out.push(ymFromYearMonth_(y, m0));
-    }
+    for (let idx = startIdx; idx <= endIdx; idx++) out.push(ymFromYearMonth_(Math.floor(idx/12), idx % 12));
     return out;
   }
 
   function buildQuarterYMsByRange_(startDate, endDate) {
     const sy = startDate.getFullYear(), sm = startDate.getMonth();
     const ey = endDate.getFullYear(), em = endDate.getMonth();
-    const startIdx = sy * 12 + sm;
-    const endIdx = ey * 12 + em;
+    const startIdx = sy * 12 + sm, endIdx = ey * 12 + em;
     if (startIdx > endIdx) return [];
-
     const out = [];
-    let idx = startIdx + 2;
-
+　  let idx = startIdx + 2;
     while (idx <= endIdx) {
-      const y = Math.floor(idx / 12);
-      const m0 = idx % 12;
-      out.push(ymFromYearMonth_(y, m0));
+      out.push(ymFromYearMonth_(Math.floor(idx / 12), idx % 12));
       idx += 3;
     }
     return out;
   }
 
   function setCycleUI_(type) {
-    const q = document.getElementById('cycleQuarter');
-    const m = document.getElementById('cycleMonth');
+    const q = document.getElementById('cycleQuarter'), m = document.getElementById('cycleMonth');
     if (!q || !m) return;
     if (type === 'month') { m.checked = true; q.checked = false; }
     else { q.checked = true; m.checked = false; }
   }
   
-  function getCycleLabel_() {
-    const isMonthly = document.getElementById('cycleMonth')?.checked;
-    return isMonthly ? "月維護" : "季維護";
-  }
+  function getCycleLabel_() { return document.getElementById('cycleMonth')?.checked ? "月維護" : "季維護"; }
 
   function isConsecutiveMonthly_(ymList) {
     if (!ymList || ymList.length < 2) return false;
     const dates = ymList.map(ym => new Date(ym + "-01")).sort((a,b) => a - b);
     for (let i = 1; i < dates.length; i++) {
-      const prev = dates[i - 1];
-      const cur = dates[i];
+      const prev = dates[i - 1], cur = dates[i];
       const expected = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
       if (expected.getTime() !== cur.getTime()) return false;
     }
@@ -756,20 +684,17 @@
   }
 
   function computeYMListByCycle_(startDate, endDate) {
-    const isMonthly = document.getElementById('cycleMonth')?.checked;
-    return isMonthly ? buildMonthlyYMsByRange_(startDate, endDate) : buildQuarterYMsByRange_(startDate, endDate);
+    return document.getElementById('cycleMonth')?.checked ? buildMonthlyYMsByRange_(startDate, endDate) : buildQuarterYMsByRange_(startDate, endDate);
   }
 
   function handleDateChange(source) {
     const startVal = document.getElementById('startDate').value;
     if(!startVal) return;
-
     if (source === 'start') endDateManual = false;
     if (source === 'end') endDateManual = true;
 
     const startDate = new Date(startVal);
     let endVal = document.getElementById('endDate').value;
-    
     if (!endVal || !endDateManual) {
       const endDateAuto = new Date(startVal);
       endDateAuto.setFullYear(startDate.getFullYear() + 1);
@@ -777,17 +702,13 @@
       document.getElementById('endDate').value = dateToYMD_(endDateAuto);
       endVal = document.getElementById('endDate').value;
     }
-
     if (!endVal) return;
-    const endDate = new Date(endVal);
-
-    editingYMList = computeYMListByCycle_(startDate, endDate);
+    editingYMList = computeYMListByCycle_(startDate, new Date(endVal));
     renderYMList();
   }
 
   function onCycleToggle(type) {
     setCycleUI_(type);
-
     const startVal = document.getElementById('startDate').value;
     const endVal = document.getElementById('endDate').value;
     if (!startVal || !endVal) {
@@ -795,11 +716,7 @@
       setCycleUI_('quarter');
       return;
     }
-
-    const startDate = new Date(startVal);
-    const endDate = new Date(endVal);
-
-    editingYMList = computeYMListByCycle_(startDate, endDate);
+    editingYMList = computeYMListByCycle_(new Date(startVal), new Date(endVal));
     renderYMList();
   }
 
@@ -807,9 +724,7 @@
     const val = document.getElementById('manualYM').value;
     if(val && !editingYMList.includes(val)) { editingYMList.push(val); editingYMList.sort(); renderYMList(); }
   }
-  
   function removeYM(ym) { editingYMList = editingYMList.filter(x => x !== ym); renderYMList(); }
-  
   function renderYMList() {
     document.getElementById('ymList').innerHTML = editingYMList.map(ym => `
       <div class="ym-tag">${ym} <span onclick="removeYM('${ym}')" style="cursor:pointer; color:var(--danger); font-weight:bold;">×</span></div>
@@ -817,14 +732,12 @@
   }
 
   function openEdit(id = null, forceReadOnly = false) {
-    resetButtonState();
-
     document.getElementById('logVersionField').style.display = 'none';
     document.getElementById('customerFields').style.display = 'block';
-
     document.getElementById('adminOnlyFields').style.display = 'block';
     document.getElementById('adminAction').style.display = 'block';
     editingId = id;
+    
     const r = records.find(x => x.id === id) || { customer:"", product:"ee-class", salesName:"Willa", engineer:"", startDate:"", endDate:"", notes:"", schedule: [] };
     const actor = getActorName_();
     const isOwnerForSales = (!id) ? true : (String(r.salesName || '') === actor);
@@ -849,21 +762,18 @@
     document.getElementById('customer').value = r.customer || "";
     document.getElementById('product').value = r.product || "ee-class";
     document.getElementById('salesName').value = r.salesName || "Willa";
-    
     if (isSalesAdmin_()) {
       if (actor) document.getElementById('salesName').value = actor;
       document.getElementById('salesName').disabled = true;
     } else {
       document.getElementById('salesName').disabled = false;
-    }
-    
-    document.getElementById('engineer').value = r.engineer || "";
+    }    
+    document.getElementById('engineer').value = r.engineer || "Johnson";
     document.getElementById('startDate').value = r.startDate || "";
     document.getElementById('endDate').value = r.endDate || "";
-    endDateManual = !!r.endDate; 
+    endDateManual = !!r.endDate;
 
     editingYMList = (r.schedule || []).map(s => s.ym);
-
     if (editingYMList.length > 0 && isConsecutiveMonthly_(editingYMList)) setCycleUI_('month');
     else setCycleUI_('quarter');
 
@@ -873,13 +783,10 @@
   }
 
   function openSystemLog(action) {
-    resetButtonState();
-
     if (action !== 'view' && adminRole !== 'super') {
       alert('權限不足：僅最高管理者可發佈日誌。');
       return;
     }
-
     editingId = VERSION_ID;
     document.getElementById('drawerTitle').textContent = "系統更新日誌";
     
@@ -892,7 +799,7 @@
         if (systemLogs.length === 0) {
             document.getElementById('note-viewer').innerHTML = '<div style="text-align:center;color:#999;padding:20px;">尚無紀錄</div>';
         } else {
-            const cardsHtml = systemLogs.map(log => {
+            document.getElementById('note-viewer').innerHTML = systemLogs.map(log => {
                 let actionBtns = '';
                 if (adminRole === 'super') {
                     actionBtns = `
@@ -901,46 +808,32 @@
                         <button type="button" class="btn btn-danger-text" onclick="deleteLogEntry('${log.version}')">刪除</button>
                     </div>`;
                 }
-                return `
-                <div class="log-card">
-                    <div class="log-header">
-                        <span class="log-version">${log.version}</span>
-                        <span class="log-date">${log.date}</span>
-                    </div>
-                    <div class="log-content">${log.content}</div>
-                    ${actionBtns}
-                </div>`;
+                return `<div class="log-card"><div class="log-header"><span class="log-version">${log.version}</span><span class="log-date">${log.date}</span></div><div class="log-content">${log.content}</div>${actionBtns}</div>`;
             }).join('');
-            document.getElementById('note-viewer').innerHTML = cardsHtml;
         }
-
     } else {
         editingLogVersion = null;
         document.getElementById('adminOnlyFields').style.display = 'block';
         document.getElementById('customerFields').style.display = 'none';
         document.getElementById('logVersionField').style.display = 'block';
         document.getElementById('btnDelete').style.display = 'none';
+        
         document.getElementById('adminAction').style.display = 'block';
         document.getElementById('editor-wrapper').style.display = 'block';
         document.getElementById('note-viewer').style.display = 'none';
         
-        const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-        document.getElementById('logVersionInput').value = "v" + today;
+        document.getElementById('logVersionInput').value = "v" + new Date().toISOString().slice(0,10).replace(/-/g,'');
         if (!ensureQuill_()) return;
         quill.root.innerHTML = ""; 
         document.getElementById('noteLabel').textContent = "本次更新內容";
     }
-    
     document.getElementById('drawer').classList.add('open');
     document.getElementById('overlay').style.display = 'block';
   }
 
   function editLogEntry(version) {
-      resetButtonState();
-
       const log = systemLogs.find(l => l.version === version);
       if (!log) return;
-
       editingLogVersion = version; 
       document.getElementById('adminOnlyFields').style.display = 'block';
       document.getElementById('customerFields').style.display = 'none';
@@ -958,51 +851,42 @@
 
   async function deleteLogEntry(version) {
       if(!confirm(`確定要刪除版本 ${version} 的日誌嗎？此動作無法復原。`)) return;
-      
-      const pwd = sessionStorage.getItem('sys_pwd');
       const payload = { action: "deleteLog", data: { targetVersion: version } };
-      
-      try {
-          const resp = await fetch(`${API_URL}&pwd=${encodeURIComponent(pwd)}`, { 
-            method: "POST", 
-            body: JSON.stringify(payload)
-          });
-          const result = await resp.json();
-          if (result.result === "success") {
-              alert("刪除成功");
-              await load(); 
-              openSystemLog('view'); 
-          } else {
-              alert("刪除失敗：" + result.message);
-          }
-      } catch(e) {
-          alert("刪除時發生錯誤");
-      }
+      await sendPayload(payload, () => {
+          alert("刪除成功");
+          openSystemLog('view'); 
+      });
   }
 
   document.getElementById('formEdit').onsubmit = async (e) => {
     e.preventDefault();
-
     const submitter = e.submitter;
     if (submitter && submitter.type !== 'submit') return;
+    const btnSubmit = document.querySelector('#formEdit .btn-primary');
 
+    // 日誌儲存
     if (editingId === VERSION_ID) {
-        await save(); 
+        if (!ensureQuill_()) return;
+        const verInput = document.getElementById('logVersionInput').value;
+        if(!verInput) { alert("請輸入版本號"); return; }
+
+        const payload = {
+            action: editingLogVersion ? "editLog" : "addLog",
+            data: { targetVersion: editingLogVersion, newVersion: verInput, content: quill.root.innerHTML }
+        };
+        await sendPayload(payload, () => openSystemLog('view'), btnSubmit);
         return;
     }
-    
+
+    // 維護資料儲存 (Upsert 單筆資料)
     if (isSalesAdmin_()) {
       const actor = getActorName_();
       if (!actor) { alert("請先輸入您的業務姓名"); return; }
       if (editingId) {
         const target = records.find(x => x.id === editingId);
-        if (target && String(target.salesName || '') !== actor) {
-          alert("權限不足：僅能編輯自己的資料。");
-          return;
-        }
+        if (target && String(target.salesName || '') !== actor) { alert("權限不足：僅能編輯自己的資料。"); return; }
       }
     }
-
     const customer = document.getElementById('customer').value.trim();
     const product = document.getElementById('product').value.trim();
     const salesName = isSalesAdmin_() ? getActorName_() : document.getElementById('salesName').value.trim();
@@ -1018,96 +902,100 @@
     if (!startDate) missing.push("維護起日");
     if (!endDate) missing.push("維護訖日");
 
-    if (missing.length > 0) {
-      alert("以下欄位尚未填寫：\n- " + missing.join("\n- "));
-      return;
-    }
+    if (missing.length > 0) { alert("以下欄位尚未填寫：\n- " + missing.join("\n- ")); return; }
+    if (new Date(startDate) > new Date(endDate)) { alert("維護起日不可晚於維護訖日，請重新確認日期。"); return; }
+    if (!document.getElementById('cycleQuarter')?.checked && !document.getElementById('cycleMonth')?.checked) { alert("請選擇「季維護」或「月維護」。"); return; }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      alert("維護起日不可晚於維護訖日，請重新確認日期。");
-      return;
-    }
-
-    const cycleQuarter = document.getElementById('cycleQuarter')?.checked;
-    const cycleMonth = document.getElementById('cycleMonth')?.checked;
-    if (!cycleQuarter && !cycleMonth) {
-      alert("請選擇「季維護」或「月維護」。");
-      return;
-    }
-
-    const cycleLabel = getCycleLabel_();
-    const confirmMsg =
-      "請確認以下資訊無誤，按「確定」後將儲存：\n\n" +
-      `客戶名稱：${customer}\n` +
-      `產品：${product}\n` +
-      `業務：${salesName}\n` +
-      `維護工程師：${engineer}\n` +
-      `維護起訖日：${startDate}~${endDate}\n` +
-      cycleLabel;
-      
+    const confirmMsg = "請確認以下資訊無誤，按「確定」後將儲存：\n\n" +
+      `客戶名稱：${customer}\n產品：${product}\n業務：${salesName}\n維護工程師：${engineer}\n` +
+      `維護起訖日：${startDate}~${endDate}\n${getCycleLabel_()}`;
     if (!confirm(confirmMsg)) return;
     
     if (!ensureQuill_()) return;
+    
+    // 生成單筆 Payload 進行 Upsert
     const rData = {
       id: editingId || 'ID-' + Date.now(),
-      customer,
-      product,
-      salesName,
-      engineer,
-      startDate,
-      endDate,
+      customer, product, salesName, engineer, startDate, endDate,
       notes: quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML,
       schedule: editingYMList.map(ym => {
         const old = (records.find(x => x.id === editingId)?.schedule || []).find(s => s.ym === ym);
         if (old) return old;
         const currentYM = new Date().toISOString().slice(0, 7);
-        const isPast = ym < currentYM;
-        return { ym, isDone: isPast, doneDate: isPast ? currentYM : "", engName: isPast ? "Auto" : "" };
+        return { ym, isDone: false, doneDate: "", engName: "" };
       })
     };
     
-    const idx = records.findIndex(x => x.id === rData.id);
-    if (idx !== -1) records[idx] = rData; else records.push(rData);
-    await save(); 
+    const payload = {
+        action: "saveRecord", // 新增的方法：只覆蓋一列
+        role: adminRole,
+        user: getActorName_() || (adminRole === "super" ? "Admin" : ""),
+        record: rData
+    };
+
+    await sendPayload(payload, () => closeDrawer(), btnSubmit);
   };
 
-  function toggleDone(id, ym) {
+  async function toggleDone(id, ym) {
     const r = records.find(x => x.id === id);
     const sch = r.schedule.find(s => s.ym === ym);
-    const currentYM = new Date().toISOString().slice(0, 7);
-    if(sch.isDone || sch.ym < currentYM) {
-      if(confirm("確定取消完工？")) { sch.isDone = false; save(); }
-    } else {
-      modalTarget = { id, ym };
-      document.getElementById('mDoneDate').value = new Date().toISOString().slice(0,10);
-      document.getElementById('doneModal').style.display = 'block';
-      document.getElementById('overlay').style.display = 'block';
-    }
+const currentYM = new Date().toISOString().slice(0, 7);
+if (sch.isDone) {
+  if(confirm("確定取消完工？")) { 
+    const payload = {
+        action: "updateSchedule",
+        role: adminRole, user: getActorName_() || "", id: id, ym: ym,
+        isCancel: true // 標記為取消完工
+    };
+    await sendPayload(payload, null, null);
+  }
+} else {
+  modalTarget = { id, ym };
+  document.getElementById('mDoneDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('doneModal').style.display = 'block';
+  document.getElementById('overlay').style.display = 'block';
+}
   }
 
-  function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; closeModal(); }
-  function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; }
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').style.display = 'none';
+    editingId = null; editingLogVersion = null;
+    closeModal();
+  }
+  function closeModal() {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    document.getElementById('overlay').style.display = 'none';
+    editingId = null; editingLogVersion = null;
+  }
+
   document.getElementById('btnDelete').onclick = async () => {
     const r = records.find(x => x.id === editingId);
     if (!r) return;
-    if (!canManageRecord_(r)) {
-      alert("權限不足：僅可刪除自己建立的資料。");
-      return;
-    }
+    if (!canManageRecord_(r)) { alert("權限不足：僅可刪除自己建立的資料。"); return; }
+    
     if (confirm("確定刪除此客戶？")) {
-      records = records.filter(x => x.id !== editingId);
-      await save();
-      closeDrawer();
+      const payload = {
+        action: "deleteRecord", // 新增的方法：安全刪除指定 ID
+        role: adminRole,
+        user: getActorName_() || "",
+        id: editingId
+      };
+      await sendPayload(payload, () => closeDrawer(), document.getElementById('btnDelete'));
     }
   };
 
   document.getElementById('mSave').onclick = async () => {
-    const r = records.find(x => x.id === modalTarget.id);
-    const sch = r.schedule.find(s => s.ym === modalTarget.ym);
-    sch.isDone = true; 
-    sch.engName = document.getElementById('mEngName').value; 
-    sch.doneDate = document.getElementById('mDoneDate').value;
-    await save(); closeModal();
+    if (!modalTarget || !modalTarget.id || !modalTarget.ym) { alert("完工申報資料缺失，請重新操作。"); return; }
+    const payload = {
+      action: "updateSchedule", // 僅更新進度
+      role: adminRole,
+      user: getActorName_() || "",
+      id: modalTarget.id, ym: modalTarget.ym,
+      engName: document.getElementById('mEngName').value,
+      doneDate: document.getElementById('mDoneDate').value
+    };
+    await sendPayload(payload, () => closeModal(), document.getElementById('mSave'));
   };
 
   document.getElementById('modeSeg').onclick = async (e) => {
@@ -1118,56 +1006,39 @@
       if (input === null) return;
 
       if (input === ADMIN_PASSWORD_A) {
-        adminRole = "super";
-        setActorName_("Admin");
+        adminRole = "super"; setActorName_("Admin");
       } else if (input === ADMIN_PASSWORD_B) {
         adminRole = "sales";
         const allowed = Array.from(document.querySelectorAll('#salesName option')).map(o => o.value);
         const last = getActorName_();
-        const name = prompt("請輸入您的姓名（需與「業務」下拉一致，例如：" + allowed.join("、") + "）", last || "");
-        if (!name) { alert("未輸入姓名，已取消切換管理模式。"); return; }
+        const name = prompt("請輸入您的英文名（首字大寫，例如：" + allowed.join("、") + "）", last || "");
+        if (!name) { alert("未輸入姓名，已取消切換。"); return; }
         const trimmed = name.trim();
-        if (!allowed.includes(trimmed)) { 
-          alert("姓名不在可選清單內，請輸入下拉選單中的名稱。");
-          return;
-        }
+        if (!allowed.includes(trimmed)) { alert("姓名不在可選清單內，請輸入下拉選單中的名稱。"); return; }
         setActorName_(trimmed);
       } else { alert("密碼錯誤"); return; }
-    } else {
-      adminRole = "user";
-    }
+    } else { adminRole = "user"; }
 
     mode = b.dataset.mode;
     document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x===b));
 
     const isAdmin = (mode === 'admin');
     document.getElementById('adminControls').style.display = isAdmin ? 'flex' : 'none';
-
     const btnPublishLog = document.getElementById('btnPublishLog');
     if (btnPublishLog) btnPublishLog.style.display = (isAdmin && adminRole === "super") ? 'inline-flex' : 'none';
-
     render();
   };
 
-
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('monthPick').value = new Date().toISOString().slice(0, 7);
-
     try {
       if (typeof Quill !== 'undefined') {
         quill = new Quill('#editor-container', {
           theme: 'snow',
-          modules: {
-            toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']]
-          }
+          modules: { toolbar: [[{ 'size': ['small', false, 'large', 'huge'] }], ['bold', 'underline', 'link'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] }
         });
-      } else {
-        console.error('Quill is not loaded.');
-      }
-    } catch (e) {
-      console.error('Quill init failed:', e);
-    }
-
+      } else { console.error('Quill is not loaded.'); alert('編輯器套件載入失敗，請檢查網路連線或重新整理。'); }
+    } catch (e) { console.error('Quill init failed:', e); }
     load();
   });
   document.getElementById('q').oninput = render;
@@ -1176,3 +1047,5 @@
 </script>
 </body>
 </html>
+
+
