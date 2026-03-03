@@ -567,7 +567,7 @@
     const filtered = records.filter(r => {
       const match = !q || r.customer.toLowerCase().includes(q) || (r.salesName||"").toLowerCase().includes(q) || (r.engineer||"").toLowerCase().includes(q) || r.product.toLowerCase().includes(q);
        const prevYM = new Date(new Date(ym + "-01").getFullYear(), new Date(ym + "-01").getMonth() - 1, 1).toISOString().slice(0,7);
-      const hasSch = (r.schedule || []).some(s =>  (s.ym === ym) ||  (s.ym === prevYM && (s.isDone === false || s.isDone === 'false' || s.isDone === 0 || s.isDone === '0' || s.isDone == null)));
+      const hasSch = (r.schedule || []).some(s =>  (s.ym === ym) || (s.ym === prevYM && !s.isDone));
       return (scope === 'need' ? hasSch : true) && match; }).sort((a,b) => a.customer.localeCompare(b.customer, 'zh-Hant'));
 
     document.getElementById('statTotal').textContent = records.length;
@@ -1047,6 +1047,7 @@ if (sch.isDone) {
 </script>
 </body>
 </html>
+
 
 
 
